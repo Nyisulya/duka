@@ -144,3 +144,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 AUTH_USER_MODEL = 'core.CustomUser'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Primary Domain ya Mfumo kwa ajili ya Tenant Subdomains
+PRIMARY_DOMAIN = os.environ.get('PRIMARY_DOMAIN', 'localhost')
+

@@ -9,17 +9,22 @@ class TenantMiddleware:
     def __call__(self, request):
         request.duka = None
         
-        # 1. Mbinu ya 1: Kugundua kupitia Subdomain (mfano: sabuni.duka.com au sabuni.localhost:8000)
-        host = request.get_host().split(':')[0]  # Ondoa port
-        host_parts = host.split('.')
+        # 1. Mbinu ya 1: Kugundua kupitia Subdomain (mfano: sabuni.duka.nyisu.com au sabuni.localhost:8000)
+        host = request.get_host().split(':')[0].lower()  # Ondoa port na uweke herufi ndogo
         
-        # Kama kuna subdomain na sio www wala localhost pekee
-        if len(host_parts) > 1 and host_parts[0] not in ['www', 'localhost', '127']:
-            subdomain = host_parts[0]
-            try:
-                request.duka = Duka.objects.get(slug=subdomain)
-            except Duka.DoesNotExist:
-                pass
+        from django.conf import settings
+        primary_domain = getattr(settings, 'PRIMARY_DOMAIN', 'localhost').lower()
+        
+        # Angalia kama host inaisha na subdomain ya primary domain
+        if host.endswith('.' + primary_domain):
+            subdomain = host[:-len('.' + primary_domain)]
+            subdomain = subdomain.split('.')[-1]  # Pata subdomain ya kwanza (mfano: sabuni)
+            
+            if subdomain not in ['www', 'localhost', '127']:
+                try:
+                    request.duka = Duka.objects.get(slug=subdomain)
+                except Duka.DoesNotExist:
+                    pass
                 
         # 2. Mbinu ya 2: Kugundua kupitia Slug ya URL (mfano: /store/sabuni/)
         if not request.duka:
