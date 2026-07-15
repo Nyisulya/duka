@@ -41,71 +41,10 @@ def index(request):
     return render(request, 'platform/landing.html', {'maduka': maduka})
 
 
-# 2. Register Duka View (SaaS level)
+# 2. Register Duka View (SaaS level - DISABLED, registration done by admin only)
 def register_duka(request):
-    if request.method == 'POST':
-        duka_name = request.POST.get('duka_name')
-        store_type = request.POST.get('store_type', 'mixer')
-        owner_name = request.POST.get('owner_name')
-        owner_email = request.POST.get('owner_email')
-        password = request.POST.get('password')
-        whatsapp_number = request.POST.get('whatsapp_number', '')
-
-        slug = slugify(duka_name)
-        
-        # Kuhakikisha slug ni ya kipekee
-        if Duka.objects.filter(slug=slug).exists():
-            messages.error(request, f"Duka lenye jina '{duka_name}' tayari lipo. Tafadhali chagua jina lingine kidogo.")
-            return render(request, 'platform/register.html')
-            
-        if CustomUser.objects.filter(username=owner_email).exists():
-            messages.error(request, f"Barua pepe '{owner_email}' tayari imetumika.")
-            return render(request, 'platform/register.html')
-
-        # Unda Duka
-        duka = Duka.objects.create(
-            name=duka_name,
-            slug=slug,
-            store_type=store_type,
-            whatsapp_number=whatsapp_number
-        )
-
-        # Unda Owner CustomUser
-        user = CustomUser.objects.create_user(
-            username=owner_email,
-            email=owner_email,
-            password=password,
-            first_name=owner_name,
-            role='owner',
-            duka=duka
-        )
-
-        # Weka Kategoria za kwanza kiotomatiki kutegemeana na aina ya duka
-        if store_type == 'sabuni':
-            Category.objects.bulk_create([
-                Category(duka=duka, name="Sabuni za Kufulia"),
-                Category(duka=duka, name="Sabuni za Kuogea"),
-                Category(duka=duka, name="Sabuni za Maji / Usafi"),
-            ])
-        elif store_type == 'mafuta':
-            Category.objects.bulk_create([
-                Category(duka=duka, name="Mafuta ya Alizeti"),
-                Category(duka=duka, name="Mafuta ya Mawese"),
-                Category(duka=duka, name="Mafuta ya Nazi"),
-            ])
-        else:
-            Category.objects.bulk_create([
-                Category(duka=duka, name="Usafi & Sabuni"),
-                Category(duka=duka, name="Mafuta ya Kupikia"),
-                Category(duka=duka, name="Vyombo & Vifaa"),
-            ])
-
-        # Login user
-        login(request, user)
-        messages.success(request, f"Duka lako la '{duka_name}' limesajiliwa kikamilifu!")
-        return redirect('store_admin_dashboard_slug', slug=slug)
-
-    return render(request, 'platform/register.html')
+    messages.error(request, "Usajili wa maduka mapya kwa umma umefungwa. Tafadhali wasiliana na msimamizi (Admin) ili kusajiliwa.")
+    return redirect('index')
 
 
 # 3. Store Front-End E-commerce views
