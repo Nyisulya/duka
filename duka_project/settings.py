@@ -10,22 +10,35 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
+from dotenv import load_dotenv
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load .env file from base directory if it exists
+dotenv_path = BASE_DIR / '.env'
+if dotenv_path.exists():
+    load_dotenv(dotenv_path)
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-ers)$uja1pm@ob6e83^m$0e^b=po)p_9_6r_p%-wkc)-gw=p04'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-ers)$uja1pm@ob6e83^m$0e^b=po)p_9_6r_p%-wkc)-gw=p04')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
-ALLOWED_HOSTS = ['*']
+# ALLOWED_HOSTS setting from environment or defaults
+hosts_env = os.environ.get('ALLOWED_HOSTS')
+if hosts_env:
+    ALLOWED_HOSTS = [h.strip() for h in hosts_env.split(',') if h.strip()]
+else:
+    ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -75,11 +88,13 @@ WSGI_APPLICATION = 'duka_project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+# Database Configuration supporting PostgreSQL (for production/VPS) and fallback to SQLite (for local testing)
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        conn_max_age=600,
+        ssl_require=False
+    )
 }
 
 
