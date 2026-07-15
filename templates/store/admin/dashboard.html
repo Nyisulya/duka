@@ -1,0 +1,328 @@
+{% extends 'store/admin/base.html' %}
+
+{% block title %}Dashboard ya Usimamizi - {{ store.name }}{% endblock %}
+
+{% block page_title %}Dashboard Kuu{% endblock %}
+
+{% block active_dashboard %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Stats grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 25px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        background-color: var(--bg-card);
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 25px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.01);
+    }
+
+    .stat-info h4 {
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin-bottom: 5px;
+        color: #0f172a;
+    }
+
+    .stat-info p {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-icon {
+        width: 55px;
+        height: 55px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .stat-icon-sales { background-color: rgba(16, 185, 129, 0.1); color: var(--success); }
+    .stat-icon-orders { background-color: rgba(79, 70, 229, 0.1); color: var(--primary); }
+    .stat-icon-stock { background-color: rgba(239, 68, 68, 0.1); color: var(--danger); }
+
+    /* Dashboard Layout Sections */
+    .dashboard-layout {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 30px;
+    }
+
+    /* Table styling */
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    .data-table th {
+        padding: 15px 20px;
+        background-color: #f8fafc;
+        color: var(--text-muted);
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .data-table td {
+        padding: 15px 20px;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 0.95rem;
+    }
+
+    .data-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .badge-pending { background-color: #fef3c7; color: #d97706; }
+    .badge-completed { background-color: #d1fae5; color: #059669; }
+    .badge-cancelled { background-color: #fee2e2; color: #dc2626; }
+
+    /* Low Stock Sidebar list */
+    .low-stock-list {
+        list-style: none;
+    }
+
+    .low-stock-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .low-stock-item:last-child {
+        border-bottom: none;
+    }
+
+    .low-stock-info h5 {
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin-bottom: 2px;
+    }
+
+    .low-stock-info span {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+    .stock-badge-critical {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .table-container {
+        overflow-x: auto;
+    }
+
+    .dashboard-title-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .dashboard-title-row h3 {
+        font-size: 1.2rem;
+        font-weight: 700;
+    }
+
+    .btn-view-all {
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .btn-view-all:hover {
+        text-decoration: underline;
+    }
+
+    @media (max-width: 1200px) {
+        .dashboard-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Stats Cards Grid -->
+<div class="stats-grid">
+    <!-- Mauzo ya POS -->
+    <div class="stat-card">
+        <div class="stat-info">
+            <h4>{{ total_sales|floatformat:"0" }} Tsh</h4>
+            <p>Jumla ya Mauzo</p>
+        </div>
+        <div class="stat-icon stat-icon-sales">
+            <i class="fa-solid fa-file-invoice-dollar"></i>
+        </div>
+    </div>
+
+    <!-- Orders za Mtandaoni -->
+    <div class="stat-card">
+        <div class="stat-info">
+            <h4>{{ total_orders }}</h4>
+            <p>Orders za Mtandaoni</p>
+        </div>
+        <div class="stat-icon stat-icon-orders">
+            <i class="fa-solid fa-shopping-bag"></i>
+        </div>
+    </div>
+
+    <!-- Bidhaa Zinazoisha -->
+    <div class="stat-card">
+        <div class="stat-info">
+            <h4>{{ low_stock_count }}</h4>
+            <p>Bidhaa Zinazoisha</p>
+        </div>
+        <div class="stat-icon stat-icon-stock">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Main Section Layout -->
+<div class="dashboard-layout">
+    <!-- Left column: Tables -->
+    <div class="left-col">
+        <!-- POS Sales table -->
+        <div class="card">
+            <div class="dashboard-title-row">
+                <h3>Mauzo ya POS ya Karibuni</h3>
+                <a href="{% url 'store_sales_report_slug' slug=store.slug %}" class="btn-view-all">Ripoti Kamili</a>
+            </div>
+            
+            {% if latest_sales %}
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Namba</th>
+                                <th>Tarehe</th>
+                                <th>Muuzaji</th>
+                                <th>Njia ya Malipo</th>
+                                <th>Jumla</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sale in latest_sales %}
+                                <tr>
+                                    <td><strong>#{{ sale.id }}</strong></td>
+                                    <td>{{ sale.sale_date|date:"d/m/Y H:i" }}</td>
+                                    <td>{{ sale.cashier.first_name }}</td>
+                                    <td>{{ sale.get_payment_method_display }}</td>
+                                    <td><strong>{{ sale.total_amount|floatformat:"0" }} Tsh</strong></td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p style="color: var(--text-muted); text-align: center; padding: 20px 0;">Hakuna mauzo yaliyofanyika dukani bado.</p>
+            {% endif %}
+        </div>
+
+        <!-- Orders Table -->
+        <div class="card">
+            <div class="dashboard-title-row">
+                <h3>Maagizo ya Mtandaoni ya Karibuni</h3>
+                <a href="{% url 'store_orders_slug' slug=store.slug %}" class="btn-view-all">Orodha Kamili</a>
+            </div>
+
+            {% if latest_orders %}
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Namba</th>
+                                <th>Mteja</th>
+                                <th>Simu</th>
+                                <th>Tarehe</th>
+                                <th>Jumla</th>
+                                <th>Hali (Status)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in latest_orders %}
+                                <tr>
+                                    <td><strong>#{{ order.id }}</strong></td>
+                                    <td>{{ order.customer_name }}</td>
+                                    <td>{{ order.customer_phone }}</td>
+                                    <td>{{ order.order_date|date:"d/m/Y H:i" }}</td>
+                                    <td><strong>{{ order.total_amount|floatformat:"0" }} Tsh</strong></td>
+                                    <td>
+                                        <span class="badge badge-{{ order.status }}">
+                                            {{ order.get_status_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p style="color: var(--text-muted); text-align: center; padding: 20px 0;">Hakuna maagizo ya mtandaoni yaliyopokelewa bado.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Right column: Stock alert -->
+    <div class="right-col">
+        <div class="card" style="height: 100%;">
+            <div class="dashboard-title-row">
+                <h3>Arifa za Stoo (Low Stock)</h3>
+                <a href="{% url 'store_products_slug' slug=store.slug %}" class="btn-view-all">Stoo Zote</a>
+            </div>
+            
+            {% if low_stock_products %}
+                <ul class="low-stock-list">
+                    {% for p in low_stock_products %}
+                        <li class="low-stock-item">
+                            <div class="low-stock-info">
+                                <h5>{{ p.name }}</h5>
+                                <span>Kategoria: {{ p.category.name|default:"General" }}</span>
+                            </div>
+                            <span class="stock-badge-critical">Stoo: {{ p.stock_level }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div style="text-align: center; padding: 40px 0; color: var(--text-muted);">
+                    <i class="fa-solid fa-circle-check" style="color: var(--success); font-size: 2.5rem; margin-bottom: 15px; opacity: 0.8;"></i>
+                    <p>Bidhaa zote zipo katika kiwango cha stoo cha kuridhisha!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

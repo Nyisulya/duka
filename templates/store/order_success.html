@@ -1,0 +1,247 @@
+{% extends 'store/base.html' %}
+
+{% block title %}Agizo Limekamilika! - {{ store.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .success-container {
+        max-width: 650px;
+        margin: 40px auto;
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        padding: 45px;
+        box-shadow: var(--shadow-lg);
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    .success-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background-color: #e8faf0;
+        color: #10b981;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        margin: 0 auto 25px auto;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+        position: relative;
+        animation: pulseGreen 2s infinite;
+    }
+
+    .success-header {
+        text-align: center;
+        margin-bottom: 35px;
+    }
+
+    .success-header h2 {
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin-bottom: 8px;
+        color: #10b981;
+        letter-spacing: -0.5px;
+    }
+
+    .success-header p {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+
+    /* Receipt Box styling (Ticket style) */
+    .receipt-box {
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 25px;
+        margin-bottom: 30px;
+        background-color: #f8fafc;
+        position: relative;
+    }
+
+    .receipt-box::before, .receipt-box::after {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background-color: var(--bg-card);
+        border-radius: 50%;
+        top: 60px;
+        border: 1px solid var(--border-color);
+        z-index: 10;
+    }
+    
+    .receipt-box::before {
+        left: -11px;
+    }
+    
+    .receipt-box::after {
+        right: -11px;
+    }
+
+    .receipt-header {
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 1.5px dashed #cbd5e1;
+        padding-bottom: 18px;
+        margin-bottom: 20px;
+        font-size: 0.95rem;
+    }
+
+    .receipt-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        font-size: 0.95rem;
+    }
+
+    .receipt-label {
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+
+    .receipt-value {
+        font-weight: 700;
+        color: var(--text-dark);
+    }
+
+    .receipt-table {
+        width: 100%;
+        margin-top: 20px;
+        border-top: 1.5px dashed #cbd5e1;
+        padding-top: 20px;
+    }
+
+    .receipt-table-header {
+        display: flex;
+        justify-content: space-between;
+        font-weight: 700;
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        margin-bottom: 12px;
+        letter-spacing: 0.5px;
+    }
+
+    .receipt-item-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.95rem;
+        margin-bottom: 10px;
+    }
+
+    .receipt-item-row span:first-child {
+        color: var(--text-dark);
+        font-weight: 500;
+    }
+
+    .receipt-item-row strong {
+        color: var(--primary);
+    }
+
+    .receipt-total-row {
+        display: flex;
+        justify-content: space-between;
+        border-top: 2px solid var(--border-color);
+        padding-top: 18px;
+        margin-top: 15px;
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: var(--primary);
+        letter-spacing: -0.5px;
+    }
+
+    .success-actions {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+    }
+
+    .btn-home {
+        background-color: var(--primary);
+        color: white;
+        text-decoration: none;
+        padding: 14px 30px;
+        border-radius: 50px;
+        font-weight: 700;
+        transition: var(--transition);
+        box-shadow: 0 4px 15px var(--primary-light);
+    }
+
+    .btn-home:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px var(--primary);
+        background-color: var(--primary-hover);
+    }
+
+    @keyframes pulseGreen {
+        0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="success-container">
+    <div class="success-icon">
+        <i class="fa-solid fa-check"></i>
+    </div>
+    
+    <div class="success-header">
+        <h2>Agizo Limepokelewa!</h2>
+        <p>Asante kwa kufanya manunuzi katika duka la {{ store.name }}.</p>
+    </div>
+
+    <div class="receipt-box">
+        <div class="receipt-header">
+            <span><strong>Namba ya Agizo:</strong> #{{ order.id }}</span>
+            <span><strong>Tarehe:</strong> {{ order.order_date|date:"d M Y, H:i" }}</span>
+        </div>
+
+        <div class="receipt-row">
+            <span class="receipt-label">Mteja:</span>
+            <span class="receipt-value">{{ order.customer_name }}</span>
+        </div>
+        <div class="receipt-row">
+            <span class="receipt-label">Namba ya Simu:</span>
+            <span class="receipt-value">{{ order.customer_phone }}</span>
+        </div>
+        <div class="receipt-row">
+            <span class="receipt-label">Hali ya Malipo:</span>
+            <span class="receipt-value" style="color: #f59e0b;">Cash on Delivery</span>
+        </div>
+
+        <div class="receipt-table">
+            <div class="receipt-table-header">
+                <span>Bidhaa x Kiasi</span>
+                <span>Jumla</span>
+            </div>
+            
+            {% for item in order.items.all %}
+                <div class="receipt-item-row">
+                    <span>{{ item.product.name }} <strong>x{{ item.quantity }}</strong></span>
+                    <span style="font-weight: 700;">{{ item.subtotal|floatformat:"0" }} Tsh</span>
+                </div>
+            {% endfor %}
+
+            <div class="receipt-total-row">
+                <span>Jumla Kuu:</span>
+                <span>{{ order.total_amount|floatformat:"0" }} Tsh</span>
+            </div>
+        </div>
+    </div>
+
+    <p style="text-align: center; color: var(--text-muted); font-size: 0.95rem; margin-bottom: 35px; line-height: 1.6; font-weight: 500;">
+        <i class="fa-solid fa-circle-info" style="color: var(--primary);"></i> 
+        Duka letu litawasiliana nawe hivi karibuni kupitia namba yako ya simu ili kuratibu utumaji na uwasilishaji wa mzigo wako.
+    </p>
+
+    <div class="success-actions">
+        <a href="{% url 'store_home_slug' slug=store.slug %}" class="btn-home">
+            Rudi Nyumbani
+        </a>
+    </div>
+</div>
+{% endblock %}

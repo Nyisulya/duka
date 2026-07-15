@@ -1,0 +1,23 @@
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv/
+
+# Local Database
+db.sqlite3
+
+# Static & Media uploads (should not be in git)
+media/
+staticfiles/
+
+# IDE & system files
+.vscode/
+.idea/
+.DS_Store
+*.log

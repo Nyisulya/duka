@@ -1,0 +1,165 @@
+{% extends 'platform/base.html' %}
+
+{% block title %}Sajili Duka Lako jipya - DukaSaaS{% endblock %}
+
+{% block extra_css %}
+<style>
+    .register-container {
+        max-width: 500px;
+        margin: 40px auto;
+        background-color: var(--bg-card);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 25px;
+        padding: 40px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .register-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .register-header h2 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+
+    .register-header p {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        font-size: 0.95rem;
+        color: var(--text-muted);
+    }
+
+    .form-group input, .form-group select {
+        width: 100%;
+        background-color: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 14px 18px;
+        color: white;
+        font-size: 1rem;
+        outline: none;
+        transition: all 0.3s ease;
+    }
+
+    .form-group input:focus, .form-group select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+    }
+
+    .form-group select option {
+        background-color: var(--bg-card);
+        color: white;
+    }
+
+    .btn-submit {
+        width: 100%;
+        background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 15px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+        margin-top: 10px;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(79, 70, 229, 0.5);
+    }
+
+    .note {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 0.9rem;
+        color: var(--text-muted);
+    }
+
+    .note a {
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .note a:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="register-container">
+    <div class="register-header">
+        <h2>Sajili Duka Lako Jipya</h2>
+        <p>Anza kusimamia mauzo na stoo yako ndani ya dakika moja</p>
+    </div>
+
+    <form method="POST">
+        {% csrf_token %}
+        
+        <!-- Jina la Duka -->
+        <div class="form-group">
+            <label for="duka_name"><i class="fa-solid fa-store"></i> Jina la Duka (Mfano: Duka la Sabuni Mitindo)</label>
+            <input type="text" id="duka_name" name="duka_name" required placeholder="Ingiza jina la duka lako">
+        </div>
+
+        <!-- Aina ya Duka -->
+        <div class="form-group">
+            <label for="store_type"><i class="fa-solid fa-tags"></i> Aina Kuu ya Bidhaa unazouza</label>
+            <select id="store_type" name="store_type" required>
+                <option value="mixer">General Household / Mixer (Bidhaa Mchanganyiko)</option>
+                <option value="sabuni">Wholesale Soaps (Sabuni za Jumla pekee)</option>
+                <option value="mafuta">Edible Oils (Mafuta ya Kupikia pekee)</option>
+                <option value="vyombo">Kitchenware & Household (Vyombo na Vifaa vya Nyumbani)</option>
+            </select>
+        </div>
+
+        <!-- Jina la Mmiliki -->
+        <div class="form-group">
+            <label for="owner_name"><i class="fa-solid fa-user"></i> Jina Kamili la Mmiliki</label>
+            <input type="text" id="owner_name" name="owner_name" required placeholder="Mfano: John Doe">
+        </div>
+
+        <!-- Barua Pepe -->
+        <div class="form-group">
+            <label for="owner_email"><i class="fa-solid fa-envelope"></i> Barua Pepe (Email itakayotumika ku-login)</label>
+            <input type="email" id="owner_email" name="owner_email" required placeholder="Mfano: john@gmail.com">
+        </div>
+
+        <!-- WhatsApp Number -->
+        <div class="form-group">
+            <label for="whatsapp_number"><i class="fa-brands fa-whatsapp"></i> Namba ya WhatsApp (Kwa kupokelea maagizo ya wateja)</label>
+            <input type="text" id="whatsapp_number" name="whatsapp_number" required placeholder="Mfano: +255 712 345 678">
+        </div>
+
+        <!-- Nenosiri -->
+        <div class="form-group">
+            <label for="password"><i class="fa-solid fa-lock"></i> Nenosiri (Password)</label>
+            <input type="password" id="password" name="password" required placeholder="Weka password imara">
+        </div>
+
+        <button type="submit" class="btn-submit">Sajili na Fungua Duka</button>
+    </form>
+
+    <div class="note">
+        Tayari una duka lililosajiliwa? <br>
+        Ukirudi kwenye ukurasa mkuu, chagua duka lako na uingie sehemu ya Admin.
+    </div>
+</div>
+{% endblock %}

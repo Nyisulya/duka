@@ -1,0 +1,166 @@
+{% extends 'store/admin/base.html' %}
+
+{% block title %}Ripoti ya Mauzo & Faida - {{ store.name }}{% endblock %}
+
+{% block page_title %}Ripoti ya Mauzo & Faida ya Duka{% endblock %}
+
+{% block active_sales %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+    .report-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 25px;
+        margin-bottom: 30px;
+    }
+
+    .report-stat-card {
+        background-color: var(--bg-card);
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 25px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.01);
+    }
+
+    .report-stat-info h4 {
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin-bottom: 5px;
+        color: #0f172a;
+    }
+
+    .report-stat-info p {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-transform: uppercase;
+    }
+
+    .report-icon {
+        width: 55px;
+        height: 55px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .icon-revenue { background-color: rgba(37, 99, 235, 0.1); color: var(--primary); }
+    .icon-profit { background-color: rgba(16, 185, 129, 0.1); color: var(--success); }
+
+    .report-list-card {
+        background-color: var(--bg-card);
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 0;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.01);
+        overflow: hidden;
+    }
+
+    /* Table styling */
+    .report-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    .report-table th {
+        padding: 18px 24px;
+        background-color: #f8fafc;
+        color: var(--text-muted);
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .report-table td {
+        padding: 18px 24px;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 0.95rem;
+        vertical-align: middle;
+    }
+
+    .report-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .items-list {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        padding-left: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Summary Header Cards -->
+<div class="report-summary-grid">
+    <!-- Jumla ya Mauzo (Revenue) -->
+    <div class="report-stat-card">
+        <div class="report-stat-info">
+            <h4>{{ total_sales|floatformat:"0" }} Tsh</h4>
+            <p>Jumla ya Mauzo (Revenue)</p>
+        </div>
+        <div class="report-icon icon-revenue">
+            <i class="fa-solid fa-wallet"></i>
+        </div>
+    </div>
+
+    <!-- Faida Halisi (Profit) -->
+    <div class="report-stat-card">
+        <div class="report-stat-info">
+            <h4 style="color: var(--success);">+{{ total_profit|floatformat:"0" }} Tsh</h4>
+            <p>Faida Halisi iliyopatikana</p>
+        </div>
+        <div class="report-icon icon-profit">
+            <i class="fa-solid fa-chart-line"></i>
+        </div>
+    </div>
+</div>
+
+<div class="report-list-card">
+    <h3 style="font-size: 1.1rem; font-weight: 700; padding: 20px 24px; border-bottom: 1px solid #e2e8f0;">Orodha ya Mauzo Yote (POS Sales)</h3>
+    {% if sales %}
+        <div style="overflow-x: auto;">
+            <table class="report-table">
+                <thead>
+                    <tr>
+                        <th>Namba ya Mauzo</th>
+                        <th>Tarehe & Muda</th>
+                        <th>Muuzaji (Cashier)</th>
+                        <th>Bidhaa zilizouzwa</th>
+                        <th>Njia ya Malipo</th>
+                        <th>Jumla Kuu</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale in sales %}
+                        <tr>
+                            <td><strong>#POS-{{ sale.id }}</strong></td>
+                            <td>{{ sale.sale_date|date:"d M Y, H:i" }}</td>
+                            <td>{{ sale.cashier.first_name }}</td>
+                            <td>
+                                <ul class="items-list">
+                                    {% for item in sale.items.all %}
+                                        <li>{{ item.product.name }} <strong>x{{ item.quantity }}</strong></li>
+                                    {% endfor %}
+                                </ul>
+                            </td>
+                            <td><span style="font-weight: 500;">{{ sale.get_payment_method_display }}</span></td>
+                            <td><strong style="color: var(--primary);">{{ sale.total_amount|floatformat:"0" }} Tsh</strong></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p style="color: var(--text-muted); text-align: center; padding: 40px 20px;">Bado hakuna mauzo yoyote ya POS yaliyorekodiwa.</p>
+    {% endif %}
+</div>
+{% endblock %}

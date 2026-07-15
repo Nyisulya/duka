@@ -1,0 +1,101 @@
+{% extends 'store/base.html' %}
+
+{% block title %}Tunakuunganisha na WhatsApp... - {{ store.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .redirect-card {
+        max-width: 500px;
+        margin: 60px auto;
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 40px 30px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    }
+
+    .whatsapp-loader {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background-color: #e8faf0;
+        color: #25d366;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.8rem;
+        margin: 0 auto 30px auto;
+        position: relative;
+        animation: pulse 1.5s infinite;
+    }
+
+    .redirect-card h3 {
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin-bottom: 15px;
+    }
+
+    .redirect-card p {
+        color: var(--text-muted);
+        line-height: 1.6;
+        margin-bottom: 30px;
+    }
+
+    .btn-manual-wa {
+        display: inline-block;
+        background-color: #25d366;
+        color: white;
+        text-decoration: none;
+        padding: 14px 28px;
+        border-radius: 50px;
+        font-weight: 600;
+        box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .btn-manual-wa:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(37, 211, 102, 0.5);
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.08); box-shadow: 0 0 0 15px rgba(37, 211, 102, 0.1); }
+        100% { transform: scale(1); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="redirect-card">
+    <div class="whatsapp-loader">
+        <i class="fa-brands fa-whatsapp"></i>
+    </div>
+    <h3>Inatuma Agizo Lako...</h3>
+    <p>
+        Tunakuunganisha na WhatsApp ili uweze kumtumia mmiliki wa duka orodha ya bidhaa zako na kukamilisha malipo. 
+        Tafadhali bofya kitufe cha kutuma (send) kitakachojitokeza kwenye WhatsApp.
+    </p>
+    
+    <a href="{{ whatsapp_url }}" id="wa-link" target="_blank" class="btn-manual-wa">
+        Kama haifunguki, Bofya Hapa
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const waLink = document.getElementById('wa-link').href;
+        
+        // Fungua WhatsApp
+        window.open(waLink, '_blank');
+        
+        // Baada ya sekunde 2, mpeleke mteja kwenye ukurasa wa mafanikio
+        setTimeout(function() {
+            window.location.href = "{{ success_url }}";
+        }, 2000);
+    });
+</script>
+{% endblock %}

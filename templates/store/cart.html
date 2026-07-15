@@ -1,0 +1,386 @@
+{% extends 'store/base.html' %}
+
+{% block title %}Kikapu chako cha Manunuzi - {{ store.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .cart-container {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+    }
+
+    .cart-header {
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 20px;
+        margin-bottom: 25px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .cart-header h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    .btn-clear-cart {
+        background: none;
+        border: none;
+        color: var(--accent);
+        font-weight: 500;
+        cursor: pointer;
+        font-size: 0.95rem;
+    }
+
+    .btn-clear-cart:hover {
+        text-decoration: underline;
+    }
+
+    /* Cart Items Table/List */
+    .cart-item {
+        display: grid;
+        grid-template-columns: 80px 1fr auto auto;
+        gap: 20px;
+        align-items: center;
+        padding: 20px 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .cart-item-img {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 12px;
+        background-color: #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--border-color);
+    }
+
+    .cart-item-img i {
+        font-size: 1.8rem;
+        color: var(--text-muted);
+        opacity: 0.4;
+    }
+
+    .cart-item-info h4 {
+        font-size: 1.05rem;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+
+    .cart-item-info p {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+    }
+
+    .quantity-controls {
+        display: flex;
+        align-items: center;
+        border: 1px solid var(--border-color);
+        border-radius: 50px;
+        overflow: hidden;
+        background-color: #f8fafc;
+    }
+
+    .quantity-btn {
+        background: none;
+        border: none;
+        width: 32px;
+        height: 32px;
+        font-size: 1.1rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-dark);
+        transition: background-color 0.2s;
+    }
+
+    .quantity-btn:hover {
+        background-color: var(--primary-light);
+        color: var(--primary);
+    }
+
+    .quantity-value {
+        width: 40px;
+        text-align: center;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    .cart-item-price {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--primary);
+        text-align: right;
+        min-width: 120px;
+    }
+
+    .btn-remove-item {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 1.1rem;
+        margin-left: 15px;
+        transition: color 0.2s;
+    }
+
+    .btn-remove-item:hover {
+        color: var(--accent);
+    }
+
+    /* Cart Summary Section */
+    .cart-summary {
+        margin-top: 30px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 15px;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        max-width: 350px;
+        font-size: 1.1rem;
+    }
+
+    .summary-total {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--primary);
+        border-top: 2px solid var(--border-color);
+        padding-top: 15px;
+        margin-top: 5px;
+    }
+
+    .cart-actions {
+        display: flex;
+        gap: 15px;
+        width: 100%;
+        max-width: 450px;
+        margin-top: 10px;
+    }
+
+    .btn-checkout {
+        flex: 1;
+        background: var(--primary);
+        color: white;
+        text-decoration: none;
+        padding: 15px 25px;
+        border-radius: 50px;
+        font-weight: 600;
+        text-align: center;
+        box-shadow: 0 4px 12px var(--primary-light);
+        transition: all 0.3s ease;
+    }
+
+    .btn-checkout:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px var(--primary);
+    }
+
+    .btn-continue {
+        background-color: white;
+        border: 1px solid var(--border-color);
+        color: var(--text-dark);
+        text-decoration: none;
+        padding: 15px 25px;
+        border-radius: 50px;
+        font-weight: 600;
+        text-align: center;
+        transition: background-color 0.2s;
+    }
+
+    .btn-continue:hover {
+        background-color: #f1f5f9;
+    }
+
+    /* Empty Cart State */
+    .empty-cart-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-cart-state i {
+        font-size: 4rem;
+        color: var(--text-muted);
+        opacity: 0.3;
+        margin-bottom: 20px;
+    }
+
+    .empty-cart-state h3 {
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+
+    .empty-cart-state p {
+        color: var(--text-muted);
+        margin-bottom: 25px;
+    }
+
+    @media (max-width: 600px) {
+        .cart-item {
+            grid-template-columns: 60px 1fr;
+            grid-template-rows: auto auto;
+            row-gap: 15px;
+        }
+        .cart-item-img {
+            width: 60px;
+            height: 60px;
+        }
+        .quantity-controls {
+            grid-column: 1 / 3;
+            justify-self: start;
+        }
+        .cart-item-price {
+            grid-column: 2;
+            text-align: left;
+            min-width: 0;
+            font-size: 1.05rem;
+            align-self: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cart-container">
+    <div id="cart-content">
+        <!-- Rendered by JavaScript -->
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const slug = '{{ store.slug }}';
+    const cartKey = 'cart_' + slug;
+
+    function getCart() {
+        return JSON.parse(localStorage.getItem(cartKey)) || [];
+    }
+
+    function saveCart(cart) {
+        localStorage.setItem(cartKey, JSON.stringify(cart));
+        updateCartBadge();
+        renderCart();
+    }
+
+    function updateQuantity(id, delta) {
+        let cart = getCart();
+        const index = cart.findIndex(item => item.id === id);
+        if (index > -1) {
+            cart[index].quantity += delta;
+            if (cart[index].quantity <= 0) {
+                cart.splice(index, 1);
+            }
+            saveCart(cart);
+        }
+    }
+
+    function removeItem(id) {
+        let cart = getCart();
+        cart = cart.filter(item => item.id !== id);
+        saveCart(cart);
+    }
+
+    function clearCart() {
+        if(confirm("Je, una uhakika unataka kufuta kikapu chote?")) {
+            saveCart([]);
+        }
+    }
+
+    function renderCart() {
+        const cart = getCart();
+        const container = document.getElementById('cart-content');
+        
+        if (cart.length === 0) {
+            container.innerHTML = `
+                <div class="empty-cart-state">
+                    <i class="fa-solid fa-shopping-bag"></i>
+                    <h3>Kikapu Chako Kipo Tupu!</h3>
+                    <p>Hujaongeza bidhaa yoyote kwenye kikapu bado.</p>
+                    <a href="{% url 'store_home_slug' slug=store.slug %}" class="btn-continue" style="display: inline-block;">Rudi Dukani Kununua</a>
+                </div>
+            `;
+            return;
+        }
+
+        let itemsHtml = '';
+        let total = 0;
+
+        cart.forEach(item => {
+            const subtotal = item.price * item.quantity;
+            total += subtotal;
+
+            const imageHtml = item.image 
+                ? `<img src="${item.image}" alt="${item.name}" class="cart-item-img">`
+                : `<div class="cart-item-img"><i class="fa-solid fa-soap"></i></div>`;
+
+            itemsHtml += `
+                <div class="cart-item">
+                    ${imageHtml}
+                    <div class="cart-item-info">
+                        <h4>${item.name}</h4>
+                        <p>${item.price.toLocaleString('en-US')} Tsh</p>
+                    </div>
+                    <div class="quantity-controls">
+                        <button class="quantity-btn" onclick="updateQuantity('${item.id}', -1)"><i class="fa-solid fa-minus"></i></button>
+                        <span class="quantity-value">${item.quantity}</span>
+                        <button class="quantity-btn" onclick="updateQuantity('${item.id}', 1)"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <div class="cart-item-price">
+                        ${subtotal.toLocaleString('en-US')} Tsh
+                        <button class="btn-remove-item" onclick="removeItem('${item.id}')" title="Ondoa"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = `
+            <div class="cart-header">
+                <h2>Kikapu Chako (${cart.reduce((acc, item) => acc + item.quantity, 0)} bidhaa)</h2>
+                <button class="btn-clear-cart" onclick="clearCart()"><i class="fa-solid fa-trash"></i> Safisha Kikapu</button>
+            </div>
+            
+            <div class="cart-items-list">
+                ${itemsHtml}
+            </div>
+
+            <div class="cart-summary">
+                <div class="summary-row">
+                    <span>Jumla Ndogo:</span>
+                    <span>${total.toLocaleString('en-US')} Tsh</span>
+                </div>
+                <div class="summary-row">
+                    <span>Gharama ya Usafiri:</span>
+                    <span style="color: #10b981; font-weight: 500;">Bure / Makubaliano</span>
+                </div>
+                <div class="summary-row summary-total">
+                    <span>Jumla Kuu:</span>
+                    <span>${total.toLocaleString('en-US')} Tsh</span>
+                </div>
+                
+                <div class="cart-actions">
+                    <a href="{% url 'store_home_slug' slug=store.slug %}" class="btn-continue">Kuongeza Bidhaa</a>
+                    <a href="{% url 'store_checkout_slug' slug=store.slug %}" class="btn-checkout">Kukamilisha Agizo</a>
+                </div>
+            </div>
+        `;
+    }
+
+    document.addEventListener('DOMContentLoaded', renderCart);
+</script>
+{% endblock %}

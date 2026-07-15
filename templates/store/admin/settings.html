@@ -1,0 +1,209 @@
+{% extends 'store/admin/base.html' %}
+
+{% block title %}Mipangilio ya Website - {{ store.name }}{% endblock %}
+
+{% block page_title %}Mipangilio ya Tovuti & Chapa (Branding){% endblock %}
+
+{% block active_settings %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-card {
+        background-color: var(--bg-card);
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.01);
+        max-width: 800px;
+    }
+
+    .form-group {
+        margin-bottom: 25px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: var(--text-dark);
+        font-size: 0.95rem;
+    }
+
+    .form-group input[type="text"], .form-group textarea {
+        width: 100%;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 12px 16px;
+        font-size: 0.95rem;
+        outline: none;
+    }
+
+    .form-group textarea {
+        height: 80px;
+        resize: vertical;
+    }
+
+    .color-picker-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .color-preview-box {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .color-picker-input {
+        border: 1px solid var(--border-color) !important;
+        border-radius: 8px;
+        width: 60px;
+        height: 45px;
+        padding: 2px !important;
+        cursor: pointer;
+    }
+
+    .upload-fields {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .upload-box {
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 15px;
+        background-color: #f8fafc;
+    }
+
+    .preview-thumbnail {
+        width: 100%;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-top: 10px;
+        border: 1px solid var(--border-color);
+    }
+
+    .btn-submit {
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        padding: 14px 28px;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 4px 10px var(--primary-light);
+        transition: all 0.2s;
+    }
+
+    .btn-submit:hover {
+        background-color: var(--primary-hover);
+    }
+
+    @media (max-width: 600px) {
+        .upload-fields {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="settings-card">
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <!-- Jina la Duka -->
+        <div class="form-group">
+            <label for="name">Jina la Duka (Kwenye Website & POS)</label>
+            <input type="text" id="name" name="name" required value="{{ store.name }}">
+        </div>
+
+        <!-- WhatsApp ya Kupokelea Maagizo -->
+        <div class="form-group">
+            <label for="whatsapp_number">Namba ya WhatsApp ya Kupokelea Maagizo</label>
+            <input type="text" id="whatsapp_number" name="whatsapp_number" required value="{{ store.whatsapp_number }}" placeholder="Mfano: +255712345678">
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">* Weka namba yenye uwezo wa WhatsApp. Wateja mtandaoni watatuma orders zao kwenye namba hii.</p>
+        </div>
+
+        <!-- Rangi ya Mandhari (Theme Color) -->
+        <div class="form-group">
+            <label for="theme_color">Rangi ya Mandhari ya Website yako (Theme Color)</label>
+            <div class="color-picker-wrapper">
+                <input type="color" id="theme_color" name="theme_color" class="color-picker-input" value="{{ store.theme_color }}" onchange="updateColorPreview(this.value)">
+                <div class="color-preview-box" id="color-preview" style="background-color: {{ store.theme_color }};"></div>
+                <span id="color-hex-text" style="font-weight: 600; font-size: 0.95rem;">{{ store.theme_color }}</span>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">* Hii itakuwa rangi kuu ya website ya mbele ya duka lako (vitufe, vichwa vya habari, hovers, n.k.)</p>
+        </div>
+
+        <!-- Logo na Banner -->
+        <div class="form-group upload-fields">
+            <div class="upload-box" id="logo-preview-wrapper">
+                <label for="logo">Nembo ya Duka (Logo)</label>
+                <input type="file" id="logo" name="logo" accept="image/*" onchange="previewFile(this, 'logo-preview-wrapper')">
+                {% if store.logo %}
+                    <img src="{{ store.logo.url }}" class="preview-thumbnail" style="width: 80px; height: 80px; border-radius: 8px;">
+                {% else %}
+                    <div class="preview-thumbnail" style="background-color: #e2e8f0; display: flex; align-items: center; justify-content: center; width: 80px; height: 80px; border-radius: 8px;"><i class="fa-regular fa-image" style="font-size: 1.5rem; color: var(--text-muted);"></i></div>
+                {% endif %}
+            </div>
+
+            <div class="upload-box" id="banner-preview-wrapper">
+                <label for="banner">Bango la Website (Banner)</label>
+                <input type="file" id="banner" name="banner" accept="image/*" onchange="previewFile(this, 'banner-preview-wrapper')">
+                {% if store.banner %}
+                    <img src="{{ store.banner.url }}" class="preview-thumbnail">
+                {% else %}
+                    <div class="preview-thumbnail" style="background-color: #e2e8f0; display: flex; align-items: center; justify-content: center;"><i class="fa-regular fa-image" style="font-size: 1.5rem; color: var(--text-muted);"></i></div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Maelezo Mafupi -->
+        <div class="form-group">
+            <label for="description">Maelezo mafupi kuhusu Duka lako</label>
+            <textarea id="description" name="description" placeholder="Mfano: Sisi ni wauzaji wa bidhaa bora za usafi na sabuni za jumla nchini.">{{ store.description }}</textarea>
+        </div>
+
+        <button type="submit" class="btn-submit">Hifadhi Mipangilio</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function updateColorPreview(val) {
+        document.getElementById('color-preview').style.backgroundColor = val;
+        document.getElementById('color-hex-text').textContent = val;
+    }
+
+    function previewFile(input, wrapperId) {
+        const wrapper = document.getElementById(wrapperId);
+        const preview = wrapper.querySelector('.preview-thumbnail');
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (preview.tagName === 'IMG') {
+                    preview.src = e.target.result;
+                } else {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = 'preview-thumbnail';
+                    if(wrapperId === 'logo-preview-wrapper') {
+                        img.style.width = '80px';
+                        img.style.height = '80px';
+                        img.style.borderRadius = '8px';
+                    }
+                    preview.replaceWith(img);
+                }
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>
+{% endblock %}

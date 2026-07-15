@@ -1,0 +1,718 @@
+{% extends 'store/admin/base.html' %}
+
+{% block title %}Point of Sale (POS) - {{ store.name }}{% endblock %}
+
+{% block page_title %}Terminal ya POS (Mauzo){% endblock %}
+
+{% block active_pos %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Full layout for POS */
+    .pos-layout {
+        display: grid;
+        grid-template-columns: 1.8fr 1.2fr;
+        gap: 25px;
+        height: calc(100vh - 150px);
+        align-items: stretch;
+    }
+
+    /* Product Section */
+    .pos-products-panel {
+        background-color: var(--bg-card);
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    .pos-search-row {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    .pos-search-row input {
+        flex: 1;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 12px 15px;
+        font-size: 0.95rem;
+        outline: none;
+    }
+
+    .pos-search-row input:focus {
+        border-color: var(--primary);
+    }
+
+    .pos-cats-scroll {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+        scrollbar-width: none;
+    }
+    .pos-cats-scroll::-webkit-scrollbar {
+        display: none;
+    }
+
+    .pos-cat-btn {
+        background-color: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        padding: 8px 16px;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        white-space: nowrap;
+        color: var(--text-dark);
+        transition: all 0.2s;
+    }
+
+    .pos-cat-btn.active, .pos-cat-btn:hover {
+        background-color: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+
+    .pos-grid-container {
+        flex: 1;
+        overflow-y: auto;
+        padding-right: 5px;
+    }
+
+    .pos-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 15px;
+    }
+
+    .pos-item-card {
+        background-color: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 10px;
+        text-align: center;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 160px;
+        transition: all 0.2s;
+    }
+
+    .pos-item-card:hover {
+        border-color: var(--primary);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        transform: translateY(-2px);
+    }
+
+    .pos-item-img {
+        width: 100%;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 8px;
+        background-color: #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 8px;
+    }
+
+    .pos-item-img i {
+        font-size: 1.8rem;
+        color: #94a3b8;
+    }
+
+    .pos-item-name {
+        font-size: 0.85rem;
+        font-weight: 600;
+        line-height: 1.3;
+        margin-bottom: 5px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        height: 35px;
+    }
+
+    .pos-item-details {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.8rem;
+        margin-top: 5px;
+    }
+
+    .pos-item-price {
+        font-weight: 700;
+        color: var(--primary);
+    }
+
+    .pos-item-stock {
+        color: var(--text-muted);
+    }
+
+    /* Cart Sidebar Section */
+    .pos-cart-panel {
+        background-color: var(--bg-card);
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    .pos-cart-header {
+        border-bottom: 1px solid #f1f5f9;
+        padding-bottom: 15px;
+        margin-bottom: 15px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .pos-cart-items {
+        flex: 1;
+        overflow-y: auto;
+        margin-bottom: 15px;
+    }
+
+    .pos-cart-row {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        gap: 15px;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid #f8fafc;
+    }
+
+    .pos-cart-item-name {
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .pos-cart-item-price {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-top: 2px;
+    }
+
+    .pos-cart-qty-ctrl {
+        display: flex;
+        align-items: center;
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+        background-color: #f8fafc;
+    }
+
+    .pos-cart-qty-btn {
+        background: none;
+        border: none;
+        width: 25px;
+        height: 25px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .pos-cart-qty-val {
+        width: 30px;
+        text-align: center;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .pos-cart-row-price {
+        font-size: 0.9rem;
+        font-weight: 700;
+        text-align: right;
+        min-width: 90px;
+    }
+
+    .pos-cart-summary {
+        border-top: 1px solid #e2e8f0;
+        padding-top: 15px;
+        margin-top: auto;
+    }
+
+    .pos-summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        font-size: 0.95rem;
+    }
+
+    .pos-summary-total {
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: var(--primary);
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px dashed #cbd5e1;
+    }
+
+    .pos-input-group {
+        margin-top: 15px;
+    }
+
+    .pos-input-group label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 5px;
+        color: var(--text-muted);
+    }
+
+    .pos-input-group select {
+        width: 100%;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 10px;
+        font-size: 0.9rem;
+    }
+
+    .btn-pos-checkout {
+        width: 100%;
+        background-color: var(--success);
+        color: white;
+        border: none;
+        padding: 14px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 1.05rem;
+        cursor: pointer;
+        margin-top: 20px;
+        box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+        transition: all 0.2s;
+    }
+
+    .btn-pos-checkout:hover {
+        background-color: #059669;
+        transform: translateY(-1px);
+    }
+
+    /* Modal for receipt */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s;
+    }
+
+    .modal-overlay.open {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .receipt-modal {
+        background-color: white;
+        border-radius: 12px;
+        width: 100%;
+        max-width: 380px;
+        padding: 25px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .thermal-receipt {
+        font-family: 'Courier New', Courier, monospace;
+        color: black;
+        font-size: 0.85rem;
+        border: 1px solid #ccc;
+        padding: 15px;
+        background-color: #fcfcfc;
+        overflow-y: auto;
+        flex: 1;
+        line-height: 1.4;
+    }
+
+    .thermal-receipt-center {
+        text-align: center;
+        margin-bottom: 15px;
+    }
+
+    .thermal-receipt-line {
+        border-top: 1px dashed black;
+        margin: 10px 0;
+    }
+
+    .receipt-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .btn-receipt-action {
+        flex: 1;
+        padding: 12px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 0.9rem;
+        text-align: center;
+        border: 1px solid #e2e8f0;
+    }
+
+    .btn-receipt-print {
+        background-color: var(--primary);
+        color: white;
+        border: none;
+    }
+
+    /* Print styling */
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        #print-area, #print-area * {
+            visibility: visible;
+        }
+        #print-area {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pos-layout">
+    <!-- Left Panel: Products List -->
+    <div class="pos-products-panel">
+        <div class="pos-search-row">
+            <input type="text" id="pos-search" placeholder="Tafuta bidhaa kwa jina au ID..." oninput="filterProducts()">
+        </div>
+
+        <div class="pos-cats-scroll">
+            <button class="pos-cat-btn active" onclick="filterCategory(null, this)">Zote</button>
+            {% for cat in categories %}
+                <button class="pos-cat-btn" onclick="filterCategory('{{ cat.id }}', this)">{{ cat.name }}</button>
+            {% endfor %}
+        </div>
+
+        <div class="pos-grid-container">
+            <div class="pos-grid" id="products-grid-el">
+                <!-- Products injected by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Panel: Cart & Payment -->
+    <div class="pos-cart-panel">
+        <div class="pos-cart-header">
+            <span>Kikapu cha Mauzo</span>
+            <button onclick="clearPosCart()" style="background: none; border: none; color: var(--danger); font-size: 0.85rem; font-weight: 600; cursor: pointer;">Futa Zote</button>
+        </div>
+
+        <div class="pos-cart-items" id="pos-cart-items-el">
+            <!-- Cart items injected by JS -->
+        </div>
+
+        <div class="pos-cart-summary">
+            <div class="pos-summary-row">
+                <span>Jumla ya Bidhaa:</span>
+                <span id="pos-summary-count">0</span>
+            </div>
+            <div class="pos-summary-row pos-summary-total">
+                <span>Jumla Kuu:</span>
+                <span id="pos-summary-total-price">0 Tsh</span>
+            </div>
+
+            <div class="pos-input-group">
+                <label for="payment-method">Njia ya Malipo</label>
+                <select id="payment-method">
+                    <option value="cash">Cash (Fedha Taslimu)</option>
+                    <option value="m-pesa">M-Pesa</option>
+                    <option value="tigopesa">Tigo Pesa</option>
+                    <option value="airtelmoney">Airtel Money</option>
+                    <option value="halo-pesa">Halo Pesa</option>
+                    <option value="card">Bank Card / Visa</option>
+                </select>
+            </div>
+
+            <button class="btn-pos-checkout" onclick="submitPosSale()">
+                <i class="fa-solid fa-circle-check"></i> Kamilisha Mauzo & Print
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Thermal Receipt Modal -->
+<div class="modal-overlay" id="receipt-modal-overlay">
+    <div class="receipt-modal">
+        <h3 style="font-weight: 700; font-size: 1.1rem; margin-bottom: 15px; text-align: center;">Mauzo Yamekamilika!</h3>
+        
+        <div class="thermal-receipt" id="print-area">
+            <!-- Thermal receipt injected here -->
+        </div>
+
+        <div class="receipt-actions">
+            <button class="btn-receipt-action" onclick="closeReceiptModal()">Funga</button>
+            <button class="btn-receipt-action btn-receipt-print" onclick="window.print()"><i class="fa-solid fa-print"></i> Print</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Load products list from context
+    const productsData = {{ products_json|safe }};
+    let posCart = [];
+    let selectedCategoryId = null;
+    let searchVal = '';
+
+    function renderProducts() {
+        const grid = document.getElementById('products-grid-el');
+        grid.innerHTML = '';
+
+        const filtered = productsData.filter(p => {
+            const matchesCat = selectedCategoryId === null || p.category_id === parseInt(selectedCategoryId);
+            const matchesSearch = p.name.toLowerCase().includes(searchVal.toLowerCase()) || p.id.toString().includes(searchVal);
+            return matchesCat && matchesSearch;
+        });
+
+        if (filtered.length === 0) {
+            grid.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center; padding: 40px 0;">Hakuna bidhaa inayolingana.</p>';
+            return;
+        }
+
+        filtered.forEach(p => {
+            const card = document.createElement('div');
+            card.className = 'pos-item-card';
+            card.onclick = () => addToPosCart(p);
+
+            const imageHtml = p.image 
+                ? `<img src="${p.image}" alt="${p.name}" class="pos-item-img">`
+                : `<div class="pos-item-img"><i class="fa-solid fa-box-open"></i></div>`;
+
+            card.innerHTML = `
+                ${imageHtml}
+                <h5 class="pos-item-name">${p.name}</h5>
+                <div class="pos-item-details">
+                    <span class="pos-item-price">${p.price.toLocaleString('en-US')}</span>
+                    <span class="pos-item-stock">Stoo: ${p.stock}</span>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    function filterCategory(catId, btnEl) {
+        // Toggle active button class
+        document.querySelectorAll('.pos-cat-btn').forEach(btn => btn.classList.remove('active'));
+        btnEl.classList.add('active');
+
+        selectedCategoryId = catId;
+        renderProducts();
+    }
+
+    function filterProducts() {
+        searchVal = document.getElementById('pos-search').value;
+        renderProducts();
+    }
+
+    function addToPosCart(product) {
+        // Find if item exists in cashier cart
+        const existing = posCart.find(item => item.id === product.id);
+        
+        // Find actual stock from list
+        const prodInDb = productsData.find(p => p.id === product.id);
+        
+        if (existing) {
+            if (existing.quantity >= prodInDb.stock) {
+                alert(`Samahani, mzigo uliobakia stoo ni ${prodInDb.stock} tu.`);
+                return;
+            }
+            existing.quantity += 1;
+        } else {
+            if (prodInDb.stock <= 0) {
+                alert("Samahani! Bidhaa hii imeisha stoo kabisa.");
+                return;
+            }
+            posCart.push({
+                id: product.id,
+                name: product.name,
+                price: product.price,
+                quantity: 1
+            });
+        }
+        renderPosCart();
+    }
+
+    function changePosQty(id, delta) {
+        const item = posCart.find(i => i.id === id);
+        const prodInDb = productsData.find(p => p.id === id);
+        
+        if (item) {
+            item.quantity += delta;
+            if (item.quantity > prodInDb.stock) {
+                alert(`Samahani, mzigo uliobakia stoo ni ${prodInDb.stock} tu.`);
+                item.quantity = prodInDb.stock;
+            }
+            if (item.quantity <= 0) {
+                posCart = posCart.filter(i => i.id !== id);
+            }
+            renderPosCart();
+        }
+    }
+
+    function clearPosCart() {
+        posCart = [];
+        renderPosCart();
+    }
+
+    function renderPosCart() {
+        const cartEl = document.getElementById('pos-cart-items-el');
+        cartEl.innerHTML = '';
+
+        if(posCart.length === 0) {
+            cartEl.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 40px 0;">Kikapu kipo tupu. Bonyeza bidhaa kushoto kuongeza.</p>';
+            document.getElementById('pos-summary-count').textContent = '0';
+            document.getElementById('pos-summary-total-price').textContent = '0 Tsh';
+            return;
+        }
+
+        let total = 0;
+        let totalCount = 0;
+
+        posCart.forEach(item => {
+            const subtotal = item.price * item.quantity;
+            total += subtotal;
+            totalCount += item.quantity;
+
+            const row = document.createElement('div');
+            row.className = 'pos-cart-row';
+            row.innerHTML = `
+                <div>
+                    <h5 class="pos-cart-item-name">${item.name}</h5>
+                    <p class="pos-cart-item-price">${item.price.toLocaleString('en-US')} Tsh</p>
+                </div>
+                <div class="pos-cart-qty-ctrl">
+                    <button class="pos-cart-qty-btn" onclick="changePosQty(${item.id}, -1)">-</button>
+                    <span class="pos-cart-qty-val">${item.quantity}</span>
+                    <button class="pos-cart-qty-btn" onclick="changePosQty(${item.id}, 1)">+</button>
+                </div>
+                <span class="pos-cart-row-price">${subtotal.toLocaleString('en-US')} Tsh</span>
+            `;
+            cartEl.appendChild(row);
+        });
+
+        document.getElementById('pos-summary-count').textContent = totalCount;
+        document.getElementById('pos-summary-total-price').textContent = total.toLocaleString('en-US') + ' Tsh';
+    }
+
+    function submitPosSale() {
+        if(posCart.length === 0) {
+            alert("Kikapu kipo tupu! Tafadhali weka bidhaa kwanza.");
+            return;
+        }
+
+        const paymentMethod = document.getElementById('payment-method').value;
+
+        // Tuma API kwa Django Server
+        fetch("{% url 'store_pos_checkout_slug' slug=store.slug %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                items: posCart,
+                payment_method: paymentMethod
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                // Sasisha stock level za data ya frontend yetu
+                posCart.forEach(item => {
+                    const dbProd = productsData.find(p => p.id === item.id);
+                    if(dbProd) {
+                        dbProd.stock = Math.max(0, dbProd.stock - item.quantity);
+                    }
+                });
+                
+                // Tengeneza thermal receipt na kuonyesha Modal
+                renderThermalReceipt(data);
+                
+                // Futa kikapu na uonyeshe upya bidhaa
+                posCart = [];
+                renderPosCart();
+                renderProducts();
+            } else {
+                alert("Hitilafu imetokea: " + data.message);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Imefeli kuunganishwa na server.");
+        });
+    }
+
+    function renderThermalReceipt(saleData) {
+        const area = document.getElementById('print-area');
+        let itemsLines = '';
+        
+        saleData.items.forEach(item => {
+            const subtotal = item.qty * item.price;
+            itemsLines += `${item.name.substring(0, 18).padEnd(18)} ${item.qty.toString().padStart(3)} x ${item.price.toLocaleString('en-US').padStart(6)} = ${subtotal.toLocaleString('en-US').padStart(8)}\n`;
+        });
+
+        area.innerHTML = `
+<div class="thermal-receipt-center">
+    <strong>*** ${'{{ store.name }}'.toUpperCase()} ***</strong><br>
+    IMETENGENEZWA NA DUKASAAS<br>
+    Namba ya Simu: ${'{{ store.whatsapp_number }}'}<br>
+</div>
+Tarehe: ${saleData.date}<br>
+Namba ya Mauzo: #POS-${saleData.sale_id}<br>
+Muuzaji: ${'{{ request.user.first_name }}'}<br>
+Njia ya Malipo: ${saleData.payment_method.toUpperCase()}<br>
+<div class="thermal-receipt-line"></div>
+${'Bidhaa'.padEnd(18)} ${'Qyt'.padStart(3)}   ${'Bei'.padStart(6)}   ${'Subtotal'.padStart(8)}<br>
+<div class="thermal-receipt-line"></div>
+${itemsLines}
+<div class="thermal-receipt-line"></div>
+<strong>JUMLA KUU: ${saleData.total.toLocaleString('en-US').padStart(23)} TSH</strong><br>
+<div class="thermal-receipt-line"></div>
+<div class="thermal-receipt-center">
+    ASANTE KWA KUFANYA KAZI NASI!<br>
+    KARIBU TENA!<br>
+</div>
+        `;
+        
+        document.getElementById('receipt-modal-overlay').classList.add('open');
+    }
+
+    function closeReceiptModal() {
+        document.getElementById('receipt-modal-overlay').classList.remove('open');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        renderProducts();
+        renderPosCart();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Dashboard ya Usimamizi - {{ store.name }}{% endblock %}</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary: {{ store.theme_color|default:"#2563eb" }};
+            --primary-hover: {{ store.theme_color|default:"#1d4ed8" }};
+            --primary-light: {{ store.theme_color|default:"#2563eb" }}15;
+            --bg-sidebar: #0f172a;
+            --bg-main: #f1f5f9;
+            --bg-card: #ffffff;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #cbd5e1;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* Sidebar styling */
+        aside {
+            width: 260px;
+            background-color: var(--bg-sidebar);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 10;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 25px 20px;
+            border-bottom: 1px solid #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sidebar-header img {
+            width: 38px;
+            height: 38px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2.5px solid var(--primary);
+        }
+
+        .sidebar-header h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 20px 0;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 5px;
+            padding: 0 15px;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 18px;
+            color: #94a3b8;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-menu a:hover, .sidebar-menu li.active a {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-menu li.active a {
+            background-color: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px var(--primary-light);
+        }
+
+        .sidebar-menu a i {
+            font-size: 1.1rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid #1e293b;
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+
+        /* Main Content Panel */
+        main {
+            margin-left: 260px;
+            flex: 1;
+            padding: 30px 40px;
+            min-height: 100vh;
+        }
+
+        /* Top Header in Dashboard */
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .top-header h2 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background-color: var(--bg-card);
+            padding: 8px 18px;
+            border-radius: 50px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+            border: 1px solid #e2e8f0;
+        }
+
+        .user-info h5 {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .user-info span {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: var(--primary-light);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Alerts in Admin */
+        .alert {
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            font-weight: 500;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            border-left: 5px solid var(--primary);
+            background-color: white;
+        }
+
+        .alert-success { border-left-color: var(--success); }
+        .alert-error { border-left-color: var(--danger); }
+        .alert-warning { border-left-color: var(--warning); }
+
+        /* General styles for cards */
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.01), 0 2px 4px -1px rgba(0, 0, 0, 0.01);
+            margin-bottom: 25px;
+        }
+
+        /* POS Quick Access Link Button */
+        .pos-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white !important;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+        .pos-btn:hover {
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+            background: #059669 !important;
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            aside {
+                width: 70px;
+            }
+            aside .sidebar-header h3, aside .sidebar-header span, aside .sidebar-menu a span, aside .sidebar-footer {
+                display: none;
+            }
+            aside .sidebar-header {
+                padding: 15px;
+                justify-content: center;
+            }
+            aside .sidebar-menu a {
+                padding: 12px;
+                justify-content: center;
+            }
+            main {
+                margin-left: 70px;
+                padding: 20px 15px;
+            }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside>
+        <div class="sidebar-header">
+            {% if store.logo %}
+                <img src="{{ store.logo.url }}" alt="{{ store.name }}">
+            {% else %}
+                <div style="background-color: var(--primary); padding: 8px; border-radius: 8px;"><i class="fa-solid fa-store"></i></div>
+            {% endif %}
+            <div>
+                <h3>{{ store.name }}</h3>
+                <span style="font-size: 0.7rem; color: var(--text-muted);">{{ store.get_store_type_display }}</span>
+            </div>
+        </div>
+
+        <ul class="sidebar-menu">
+            <li class="{% block active_dashboard %}{% endblock %}">
+                <a href="{% url 'store_admin_dashboard_slug' slug=store.slug %}">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            
+            <!-- POS Kitufe cha Wauzaji -->
+            <li class="{% block active_pos %}{% endblock %}">
+                <a href="{% url 'store_pos_slug' slug=store.slug %}" class="pos-btn">
+                    <i class="fa-solid fa-cash-register"></i>
+                    <span>Point of Sale (POS)</span>
+                </a>
+            </li>
+
+            <li class="{% block active_products %}{% endblock %}">
+                <a href="{% url 'store_products_slug' slug=store.slug %}">
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                    <span>Bidhaa / Stock</span>
+                </a>
+            </li>
+            <li class="{% block active_categories %}{% endblock %}">
+                <a href="{% url 'store_categories_slug' slug=store.slug %}">
+                    <i class="fa-solid fa-tags"></i>
+                    <span>Kategoria</span>
+                </a>
+            </li>
+            <li class="{% block active_orders %}{% endblock %}">
+                <a href="{% url 'store_orders_slug' slug=store.slug %}">
+                    <i class="fa-solid fa-shopping-bag"></i>
+                    <span>Orders za Mtandaoni</span>
+                </a>
+            </li>
+            <li class="{% block active_sales %}{% endblock %}">
+                <a href="{% url 'store_sales_report_slug' slug=store.slug %}">
+                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                    <span>Ripoti ya Mauzo & Faida</span>
+                </a>
+            </li>
+            <li class="{% block active_settings %}{% endblock %}">
+                <a href="{% url 'store_settings_slug' slug=store.slug %}">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>Mipangilio ya Website</span>
+                </a>
+            </li>
+            
+            <li style="margin-top: 30px;">
+                <a href="{% url 'store_home_slug' slug=store.slug %}" target="_blank">
+                    <i class="fa-solid fa-globe"></i>
+                    <span>Fungua Website</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'store_logout_slug' slug=store.slug %}" style="color: var(--danger);">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Toka (Logout)</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="sidebar-footer">
+            <p>DukaSaaS POS v1.0</p>
+        </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main>
+        <div class="top-header">
+            <h2>{% block page_title %}Dashboard{% endblock %}</h2>
+            <div class="user-profile">
+                <div class="user-info">
+                    <h5>{{ request.user.first_name }}</h5>
+                    <span>{{ request.user.get_role_display }}</span>
+                </div>
+                <div class="user-avatar">
+                    {{ request.user.first_name|slice:":1"|upper }}
+                </div>
+            </div>
+        </div>
+
+        <!-- System Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}error{% else %}{{ message.tags }}{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
