@@ -331,7 +331,7 @@
     
     <div class="stores-grid">
         {% for d in maduka %}
-        <a href="{% url 'store_home_slug' slug=d.slug %}" class="store-card">
+        <a href="{{ request.scheme }}://{{ d.slug }}.{{ request.get_host }}{% url 'store_home_slug' slug=d.slug %}" class="store-card">
             {% if d.logo %}
                 <img src="{{ d.logo.url }}" alt="{{ d.name }}" class="store-avatar">
             {% else %}

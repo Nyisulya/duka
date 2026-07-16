@@ -33,9 +33,21 @@ class TenantMiddleware:
             if len(path_parts) >= 2 and path_parts[0] == 'store':
                 slug = path_parts[1]
                 try:
-                    request.duka = Duka.objects.get(slug=slug)
+                    duka = Duka.objects.get(slug=slug)
                 except Duka.DoesNotExist:
                     raise Http404("Samahani! Duka hili halipo katika mfumo wetu.")
+
+                # Kama tupo kwenye production/VPS (domain sio localhost/127.0.0.1), redirect kwenda kwenye subdomain yake
+                if primary_domain and primary_domain not in ['localhost', '127.0.0.1']:
+                    protocol = 'https' if request.is_secure() else 'http'
+                    host_parts = request.get_host().split(':')
+                    port_suffix = f":{host_parts[1]}" if len(host_parts) > 1 else ""
+                    
+                    new_url = f"{protocol}://{slug}.{primary_domain}{port_suffix}{request.get_full_path()}"
+                    from django.http import HttpResponseRedirect
+                    return HttpResponseRedirect(new_url)
+
+                request.duka = duka
 
         response = self.get_response(request)
         return response
