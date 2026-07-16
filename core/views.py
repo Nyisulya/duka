@@ -10,7 +10,7 @@ from django.utils import timezone
 from datetime import timedelta
 import urllib.parse
 
-from .models import Duka, CustomUser, Category, Product, Sale, SaleItem, Order, OrderItem
+from .models import Duka, CustomUser, Category, Product, Sale, SaleItem, Order, OrderItem, Customer, Debt, DebtPayment
 
 # Helper decorator ili kuhakikisha mtumiaji aliye-login anafikia duka lake tu
 def store_access_required(view_func):
@@ -384,14 +384,22 @@ def store_pos_checkout(request, slug):
             data = json.loads(request.body)
             items = data.get('items', [])
             payment_method = data.get('payment_method', 'cash')
+            customer_id = data.get('customer_id')
             
             if not items:
                 return JsonResponse({'success': False, 'message': 'Hakuna bidhaa kwenye kapu.'}, status=400)
+                
+            customer = None
+            if payment_method == 'debt':
+                if not customer_id:
+                    return JsonResponse({'success': False, 'message': 'Mteja anahitajika kwa mauzo ya deni.'}, status=400)
+                customer = get_object_or_404(Customer, id=customer_id, duka=duka)
                 
             total = 0
             sale = Sale.objects.create(
                 duka=duka,
                 cashier=request.user,
+                customer=customer,
                 total_amount=0,
                 payment_method=payment_method
             )
@@ -404,7 +412,6 @@ def store_pos_checkout(request, slug):
                 
                 # Hakikisha stoo inatosha
                 if product.stock_level < qty:
-                    # Kama stoo haitoshi, uza kilichopo
                     qty = product.stock_level
                     
                 if qty <= 0:
@@ -431,12 +438,23 @@ def store_pos_checkout(request, slug):
 
             sale.total_amount = total
             sale.save()
+            
+            # Kama ni deni, unda rekodi ya Debt
+            if payment_method == 'debt':
+                Debt.objects.create(
+                    duka=duka,
+                    customer=customer,
+                    sale=sale,
+                    amount=total,
+                    balance=total
+                )
 
             return JsonResponse({
                 'success': True,
                 'sale_id': sale.id,
                 'total': float(total),
                 'payment_method': sale.get_payment_method_display(),
+                'customer_name': customer.name if customer else None,
                 'date': sale.sale_date.strftime('%Y-%m-%d %H:%M:%S'),
                 'items': receipt_items
             })
@@ -444,6 +462,31 @@ def store_pos_checkout(request, slug):
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
     return JsonResponse({'success': False, 'message': 'Njia isiyoruhusiwa'}, status=405)
+
+
+@login_required
+@store_access_required
+def store_quick_customer(request, slug):
+    duka = request.user.duka if not request.user.is_superuser else get_object_or_404(Duka, slug=slug)
+    if request.method == 'POST':
+        import json
+        try:
+            data = json.loads(request.body)
+            name = data.get('name')
+            phone = data.get('phone')
+            
+            if not name or not phone:
+                return JsonResponse({'success': False, 'message': 'Jina na Namba ya Simu vinahitajika.'}, status=400)
+                
+            if Customer.objects.filter(duka=duka, phone=phone).exists():
+                c = Customer.objects.get(duka=duka, phone=phone)
+                return JsonResponse({'success': True, 'customer_id': c.id, 'name': c.name, 'phone': c.phone, 'message': 'Mteja tayari yupo.'})
+                
+            c = Customer.objects.create(duka=duka, name=name, phone=phone)
+            return JsonResponse({'success': True, 'customer_id': c.id, 'name': c.name, 'phone': c.phone})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
+    return JsonResponse({'success': False, 'message': 'Njia isiyoruhusiwa.'}, status=405)
 
 
 @login_required
@@ -495,3 +538,144 @@ def store_order_update(request, slug, order_id):
             messages.success(request, f"Hali ya agizo #{order.id} imebadilishwa kuwa '{order.get_status_display()}'")
             
     return redirect('store_orders_slug', slug=slug)
+
+
+@login_required
+@store_access_required
+def store_debts(request, slug):
+    duka = request.user.duka if not request.user.is_superuser else get_object_or_404(Duka, slug=slug)
+    
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        phone = request.POST.get('phone')
+        email = request.POST.get('email', '')
+        address = request.POST.get('address', '')
+        
+        if Customer.objects.filter(duka=duka, phone=phone).exists():
+            messages.error(request, f"Mteja mwenye namba ya simu '{phone}' tayari amesajiliwa.")
+        else:
+            Customer.objects.create(
+                duka=duka,
+                name=name,
+                phone=phone,
+                email=email,
+                address=address
+            )
+            messages.success(request, f"Mteja '{name}' amesajiliwa kikamilifu.")
+            return redirect('store_debts_slug', slug=slug)
+
+    # Kusanya wateja na muhtasari wa madeni yao
+    customers_with_debts = []
+    for c in duka.customers.all().order_by('name'):
+        debts = c.debts.all()
+        total_borrowed = sum(d.amount for d in debts)
+        total_balance = sum(d.balance for d in debts)
+        total_paid = total_borrowed - total_balance
+        customers_with_debts.append({
+            'id': c.id,
+            'name': c.name,
+            'phone': c.phone,
+            'total_borrowed': total_borrowed,
+            'total_balance': total_balance,
+            'total_paid': total_paid,
+        })
+        
+    # Hesabu muhtasari (Totals)
+    total_debt_balance = sum(r['total_balance'] for r in customers_with_debts)
+    debtors_count = sum(1 for r in customers_with_debts if r['total_balance'] > 0)
+    
+    today = timezone.now().date()
+    today_repayments = DebtPayment.objects.filter(
+        debt__duka=duka,
+        payment_date__date=today
+    ).aggregate(sum=Sum('amount_paid'))['sum'] or 0
+
+    context = {
+        'store': duka,
+        'customers_with_debts': customers_with_debts,
+        'total_debt_balance': total_debt_balance,
+        'debtors_count': debtors_count,
+        'today_repayments': today_repayments,
+    }
+    return render(request, 'store/admin/debts.html', context)
+
+
+@login_required
+@store_access_required
+def store_debt_detail(request, slug, customer_id):
+    duka = request.user.duka if not request.user.is_superuser else get_object_or_404(Duka, slug=slug)
+    customer = get_object_or_404(Customer, id=customer_id, duka=duka)
+    
+    debts = customer.debts.all().order_by('-created_at')
+    payments = DebtPayment.objects.filter(debt__customer=customer).order_by('-payment_date')
+    
+    total_borrowed = sum(d.amount for d in debts)
+    total_balance = sum(d.balance for d in debts)
+    total_paid = total_borrowed - total_balance
+    
+    context = {
+        'store': duka,
+        'customer': customer,
+        'debts': debts,
+        'payments': payments,
+        'total_borrowed': total_borrowed,
+        'total_balance': total_balance,
+        'total_paid': total_paid,
+    }
+    return render(request, 'store/admin/debt_detail.html', context)
+
+
+@login_required
+@store_access_required
+def store_debt_pay(request, slug, customer_id):
+    duka = request.user.duka if not request.user.is_superuser else get_object_or_404(Duka, slug=slug)
+    customer = get_object_or_404(Customer, id=customer_id, duka=duka)
+    
+    if request.method == 'POST':
+        from decimal import Decimal
+        try:
+            amount_paid = Decimal(request.POST.get('amount_paid', '0'))
+        except Exception:
+            amount_paid = Decimal('0')
+            
+        payment_method = request.POST.get('payment_method', 'cash')
+        
+        # Pata madeni yote ambayo hayajalipwa kikamilifu
+        unpaid_debts = customer.debts.filter(status__in=['unpaid', 'partially_paid']).order_by('created_at')
+        
+        if amount_paid <= 0:
+            messages.error(request, "Kiasi cha malipo lazima kiwe kikubwa kuliko sifuri.")
+            return redirect('store_debt_detail_slug', slug=slug, customer_id=customer_id)
+            
+        total_balance = sum(d.balance for d in unpaid_debts)
+        if amount_paid > total_balance:
+            messages.error(request, f"Kiasi kilicholipwa ({amount_paid} TZS) ni kikubwa kuliko deni lililobaki ({total_balance} TZS).")
+            return redirect('store_debt_detail_slug', slug=slug, customer_id=customer_id)
+            
+        # Gawa malipo kwenye madeni kuanzia la kwanza (FIFO)
+        remaining_payment = amount_paid
+        for debt in unpaid_debts:
+            if remaining_payment <= 0:
+                break
+                
+            pay_amount = min(debt.balance, remaining_payment)
+            debt.balance -= pay_amount
+            remaining_payment -= pay_amount
+            
+            if debt.balance == 0:
+                debt.status = 'paid'
+            else:
+                debt.status = 'partially_paid'
+            debt.save()
+            
+            # Rekodi malipo ya awamu
+            DebtPayment.objects.create(
+                debt=debt,
+                amount_paid=pay_amount,
+                payment_method=payment_method,
+                received_by=request.user
+            )
+            
+        messages.success(request, f"Malipo ya deni kiasi cha {amount_paid} TZS yamefanikiwa kurekodiwa!")
+        
+    return redirect('store_debt_detail_slug', slug=slug, customer_id=customer_id)

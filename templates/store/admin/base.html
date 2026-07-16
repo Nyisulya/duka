@@ -366,6 +366,12 @@
                     <span>Ripoti ya Mauzo & Faida</span>
                 </a>
             </li>
+            <li class="{% block active_debts %}{% endblock %}">
+                <a href="{% url 'store_debts_slug' slug=store.slug %}">
+                    <i class="fa-solid fa-hand-holding-dollar"></i>
+                    <span>Kusimamia Madeni</span>
+                </a>
+            </li>
             <li class="{% block active_settings %}{% endblock %}">
                 <a href="{% url 'store_settings_slug' slug=store.slug %}">
                     <i class="fa-solid fa-sliders"></i>

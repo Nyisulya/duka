@@ -448,10 +448,42 @@
                     <option value="airtelmoney">Airtel Money</option>
                     <option value="halo-pesa">Halo Pesa</option>
                     <option value="card">Bank Card / Visa</option>
+                    <option value="debt">Deni / Mkopo</option>
                 </select>
             </div>
 
-            <button class="btn-pos-checkout" onclick="submitPosSale()">
+            <!-- Customer Selection for Debt -->
+            <div class="pos-input-group" id="customer-select-group" style="display: none; margin-top: 15px;">
+                <label for="customer-select">Chagua Mteja (kwa Mauzo ya Deni) *</label>
+                <div style="display: flex; gap: 8px;">
+                    <select id="customer-select" style="flex: 1; padding: 10px; border-radius: 10px; border: 1px solid var(--border-color);">
+                        <option value="">-- Chagua Mteja --</option>
+                        {% for customer in store.customers.all %}
+                            <option value="{{ customer.id }}">{{ customer.name }} ({{ customer.phone }})</option>
+                        {% endfor %}
+                    </select>
+                    <button type="button" class="btn-pos-checkout" style="display: block; padding: 10px; margin: 0; width: auto; background: var(--primary);" onclick="toggleQuickCustomerForm(true)" title="Sajili Mteja Mpya">
+                        <i class="fa-solid fa-user-plus"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Customer Form -->
+            <div id="quick-customer-form" style="display: none; background-color: var(--primary-light); padding: 15px; border-radius: 10px; margin-top: 15px; border: 1px dashed var(--primary);">
+                <h5 style="margin-bottom: 10px; font-weight: 600; font-size: 0.9rem;">Sajili Mteja Mpya Haraka</h5>
+                <div class="pos-input-group" style="margin-bottom: 8px;">
+                    <input type="text" id="quick-customer-name" placeholder="Jina la Mteja *" style="padding: 10px; font-size: 0.85rem; width: 100%; border: 1px solid var(--border-color); border-radius: 8px;">
+                </div>
+                <div class="pos-input-group" style="margin-bottom: 8px;">
+                    <input type="text" id="quick-customer-phone" placeholder="Namba ya Simu *" style="padding: 10px; font-size: 0.85rem; width: 100%; border: 1px solid var(--border-color); border-radius: 8px;">
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" class="btn-pos-checkout" style="padding: 8px 15px; font-size: 0.85rem; background: var(--primary); margin: 0; width: auto;" onclick="saveQuickCustomer()">Hifadhi</button>
+                    <button type="button" class="btn-pos-checkout" style="padding: 8px 15px; font-size: 0.85rem; background: var(--text-muted); margin: 0; width: auto;" onclick="toggleQuickCustomerForm(false)">Ghairi</button>
+                </div>
+            </div>
+
+            <button class="btn-pos-checkout" style="margin-top: 20px;" onclick="submitPosSale()">
                 <i class="fa-solid fa-circle-check"></i> Kamilisha Mauzo & Print
             </button>
         </div>
@@ -630,6 +662,12 @@
         }
 
         const paymentMethod = document.getElementById('payment-method').value;
+        const customerId = document.getElementById('customer-select').value;
+
+        if (paymentMethod === 'debt' && !customerId) {
+            alert("Tafadhali chagua mteja anayekopa.");
+            return;
+        }
 
         // Tuma API kwa Django Server
         fetch("{% url 'store_pos_checkout_slug' slug=store.slug %}", {
@@ -640,7 +678,8 @@
             },
             body: JSON.stringify({
                 items: posCart,
-                payment_method: paymentMethod
+                payment_method: paymentMethod,
+                customer_id: customerId
             })
         })
         .then(res => res.json())
@@ -680,6 +719,11 @@
             itemsLines += `${item.name.substring(0, 18).padEnd(18)} ${item.qty.toString().padStart(3)} x ${item.price.toLocaleString('en-US').padStart(6)} = ${subtotal.toLocaleString('en-US').padStart(8)}\n`;
         });
 
+        let customerLine = '';
+        if (saleData.customer_name) {
+            customerLine = `Mteja: ${saleData.customer_name}<br>`;
+        }
+
         area.innerHTML = `
 <div class="thermal-receipt-center">
     <strong>*** ${'{{ store.name }}'.toUpperCase()} ***</strong><br>
@@ -690,6 +734,7 @@ Tarehe: ${saleData.date}<br>
 Namba ya Mauzo: #POS-${saleData.sale_id}<br>
 Muuzaji: ${'{{ request.user.first_name }}'}<br>
 Njia ya Malipo: ${saleData.payment_method.toUpperCase()}<br>
+${customerLine}
 <div class="thermal-receipt-line"></div>
 ${'Bidhaa'.padEnd(18)} ${'Qyt'.padStart(3)}   ${'Bei'.padStart(6)}   ${'Subtotal'.padStart(8)}<br>
 <div class="thermal-receipt-line"></div>
@@ -704,6 +749,76 @@ ${itemsLines}
         `;
         
         document.getElementById('receipt-modal-overlay').classList.add('open');
+    }
+
+    // Toggle customer group and quick customer form actions
+    document.getElementById('payment-method').addEventListener('change', function() {
+        const selectGroup = document.getElementById('customer-select-group');
+        if (this.value === 'debt') {
+            selectGroup.style.display = 'block';
+        } else {
+            selectGroup.style.display = 'none';
+            toggleQuickCustomerForm(false);
+        }
+    });
+
+    function toggleQuickCustomerForm(show) {
+        const form = document.getElementById('quick-customer-form');
+        form.style.display = show ? 'block' : 'none';
+        if (!show) {
+            document.getElementById('quick-customer-name').value = '';
+            document.getElementById('quick-customer-phone').value = '';
+        }
+    }
+
+    function saveQuickCustomer() {
+        const name = document.getElementById('quick-customer-name').value.trim();
+        const phone = document.getElementById('quick-customer-phone').value.trim();
+
+        if (!name || !phone) {
+            alert("Tafadhali jaza Jina na Namba ya Simu.");
+            return;
+        }
+
+        fetch("{% url 'store_quick_customer_slug' slug=store.slug %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ name: name, phone: phone })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const select = document.getElementById('customer-select');
+                
+                let exists = false;
+                for (let i = 0; i < select.options.length; i++) {
+                    if (select.options[i].value == data.customer_id) {
+                        exists = true;
+                        break;
+                    }
+                }
+                
+                if (!exists) {
+                    const opt = document.createElement('option');
+                    opt.value = data.customer_id;
+                    opt.textContent = `${data.name} (${data.phone})`;
+                    select.appendChild(opt);
+                }
+                
+                select.value = data.customer_id;
+                toggleQuickCustomerForm(false);
+                alert("Mteja amesajiliwa na kuchaguliwa!");
+            } else {
+                alert("Imefeli kusajili mteja: " + data.message);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Hitilafu imetokea wakati wa kuwasiliana na server.");
+        });
     }
 
     function closeReceiptModal() {

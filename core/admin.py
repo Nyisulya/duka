@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Duka, CustomUser, Category, Product, Sale, SaleItem, Order, OrderItem
+from .models import Duka, CustomUser, Category, Product, Sale, SaleItem, Order, OrderItem, Customer, Debt, DebtPayment
 
 class CustomUserAdmin(UserAdmin):
     fieldsets = UserAdmin.fieldsets + (
@@ -35,6 +35,21 @@ class OrderAdmin(admin.ModelAdmin):
     list_filter = ('duka', 'status', 'order_date')
     inlines = [OrderItemInline]
 
+class CustomerAdmin(admin.ModelAdmin):
+    list_display = ('name', 'duka', 'phone', 'email', 'created_at')
+    list_filter = ('duka',)
+    search_fields = ('name', 'phone')
+
+class DebtPaymentInline(admin.TabularInline):
+    model = DebtPayment
+    extra = 0
+
+class DebtAdmin(admin.ModelAdmin):
+    list_display = ('id', 'customer', 'duka', 'amount', 'balance', 'due_date', 'status', 'created_at')
+    list_filter = ('duka', 'status', 'due_date')
+    search_fields = ('customer__name', 'notes')
+    inlines = [DebtPaymentInline]
+
 # Sajili models kwenye Django Admin
 admin.site.register(Duka)
 admin.site.register(CustomUser, CustomUserAdmin)
@@ -42,3 +57,6 @@ admin.site.register(Category)
 admin.site.register(Product, ProductAdmin)
 admin.site.register(Sale, SaleAdmin)
 admin.site.register(Order, OrderAdmin)
+admin.site.register(Customer, CustomerAdmin)
+admin.site.register(Debt, DebtAdmin)
+admin.site.register(DebtPayment)

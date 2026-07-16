@@ -209,6 +209,63 @@ def seed_data():
         min_stock_alert=4
     )
     
+    # 4. Wateja na Madeni ya Mfano (kwa ajili ya demo)
+    from core.models import Customer, Debt, DebtPayment
+    
+    cust1 = Customer.objects.create(
+        duka=duka3,
+        name="Amani Mwakalila",
+        phone="0712345678",
+        email="amani@gmail.com",
+        address="Mwenge, Dar es Salaam"
+    )
+    
+    cust2 = Customer.objects.create(
+        duka=duka3,
+        name="Neema Tarimo",
+        phone="0755998877",
+        email="neema.t@yahoo.com",
+        address="Sinza, Dar es Salaam"
+    )
+    
+    # Deni 1 la Amani (Tayari kashalipa kiasi)
+    debt1 = Debt.objects.create(
+        duka=duka3,
+        customer=cust1,
+        amount=35000.00,
+        balance=15000.00, # Kwanza alikopa 35,000, kabakiwa na 15,000
+        status="partially_paid",
+        notes="Alikopa seti ya vyombo na mafuta ya kupikia."
+    )
+    
+    # Rekodi malipo ya debt1
+    DebtPayment.objects.create(
+        debt=debt1,
+        amount_paid=20000.00,
+        payment_method="m-pesa",
+        received_by=owner3
+    )
+    
+    # Deni la pili la Amani (Bado hajalipa)
+    Debt.objects.create(
+        duka=duka3,
+        customer=cust1,
+        amount=10000.00,
+        balance=10000.00,
+        status="unpaid",
+        notes="Alikopa sabuni ya kipande ya kufulia."
+    )
+    
+    # Deni la Neema (Bado hajalipa kabisa)
+    Debt.objects.create(
+        duka=duka3,
+        customer=cust2,
+        amount=22000.00,
+        balance=22000.00,
+        status="unpaid",
+        notes="Alikopa mafuta ya alizeti (Lita 5)."
+    )
+    
     print("Data za majaribio zimeingizwa kikamilifu!")
     print("\nUnaweza kutumia akaunti hizi za majaribio:")
     print("1. Duka la Sabuni: mitindo_owner (Nenosiri: password123)")

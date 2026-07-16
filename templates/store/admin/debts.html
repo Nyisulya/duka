@@ -1,0 +1,344 @@
+{% extends 'store/admin/base.html' %}
+
+{% block title %}Kusimamia Madeni - {{ store.name }}{% endblock %}
+
+{% block page_title %}Usimamizi wa Madeni & Wateja{% endblock %}
+
+{% block active_debts %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+    .debts-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .summary-card {
+        background-color: var(--bg-card);
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.01);
+    }
+
+    .summary-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        background-color: var(--primary-light);
+        color: var(--primary);
+    }
+
+    .summary-icon.danger {
+        background-color: #fee2e2;
+        color: var(--danger);
+    }
+
+    .summary-icon.success {
+        background-color: #d1fae5;
+        color: var(--success);
+    }
+
+    .summary-info h4 {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        margin-bottom: 5px;
+    }
+
+    .summary-info p {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--text-dark);
+    }
+
+    .debts-layout {
+        display: grid;
+        grid-template-columns: 1fr 2.5fr;
+        gap: 30px;
+        align-items: start;
+    }
+
+    .form-card {
+        background-color: var(--bg-card);
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.01);
+    }
+
+    .form-group {
+        margin-bottom: 18px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .form-group input, .form-group textarea {
+        width: 100%;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 12px;
+        font-size: 0.95rem;
+        outline: none;
+    }
+
+    .form-group textarea {
+        height: 80px;
+        resize: none;
+    }
+
+    .form-group input:focus, .form-group textarea:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .btn-save {
+        width: 100%;
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        padding: 12px;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 4px 10px var(--primary-light);
+        transition: background-color 0.2s;
+    }
+
+    .btn-save:hover {
+        background-color: var(--primary-hover);
+    }
+
+    /* List table */
+    .list-card {
+        background-color: var(--bg-card);
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 0;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.01);
+        overflow: hidden;
+    }
+
+    .table-container {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .debt-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    .debt-table th {
+        padding: 15px 20px;
+        background-color: #f8fafc;
+        color: var(--text-muted);
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .debt-table td {
+        padding: 15px 20px;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 0.95rem;
+        vertical-align: middle;
+    }
+
+    .debt-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .status-badge.danger {
+        background-color: #fee2e2;
+        color: var(--danger);
+    }
+
+    .status-badge.warning {
+        background-color: #fef3c7;
+        color: var(--warning);
+    }
+
+    .status-badge.success {
+        background-color: #d1fae5;
+        color: var(--success);
+    }
+
+    .btn-action {
+        background-color: var(--primary-light);
+        color: var(--primary);
+        border: 1px solid var(--primary);
+        border-radius: 8px;
+        padding: 6px 12px;
+        font-weight: 600;
+        text-decoration: none;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-action:hover {
+        background-color: var(--primary);
+        color: white;
+    }
+
+    @media (max-width: 992px) {
+        .debts-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Summary -->
+<div class="debts-summary">
+    <div class="summary-card">
+        <div class="summary-icon danger">
+            <i class="fa-solid fa-hand-holding-dollar"></i>
+        </div>
+        <div class="summary-info">
+            <h4>Jumla ya Madeni yote</h4>
+            <p>{{ total_debt_balance|default:"0" }} TZS</p>
+        </div>
+    </div>
+    
+    <div class="summary-card">
+        <div class="summary-icon">
+            <i class="fa-solid fa-users"></i>
+        </div>
+        <div class="summary-info">
+            <h4>Wateja Wenye Madeni</h4>
+            <p>{{ debtors_count }} wateja</p>
+        </div>
+    </div>
+
+    <div class="summary-card">
+        <div class="summary-icon success">
+            <i class="fa-solid fa-calendar-check"></i>
+        </div>
+        <div class="summary-info">
+            <h4>Marejesho Leo</h4>
+            <p>{{ today_repayments }} TZS</p>
+        </div>
+    </div>
+</div>
+
+<div class="debts-layout">
+    <!-- Left Form: Add Customer -->
+    <div class="form-card">
+        <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 20px;">Sajili Mteja Mpya</h3>
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="name">Jina la Mteja *</label>
+                <input type="text" id="name" name="name" required placeholder="Mfano: Juma Kiboko">
+            </div>
+            
+            <div class="form-group">
+                <label for="phone">Namba ya Simu *</label>
+                <input type="text" id="phone" name="phone" required placeholder="Mfano: 0712345678">
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Barua Pepe (Email)</label>
+                <input type="email" id="email" name="email" placeholder="Mfano: mteja@gmail.com">
+            </div>
+
+            <div class="form-group">
+                <label for="address">Anwani / Maelezo</label>
+                <textarea id="address" name="address" placeholder="Anapoishi au maelezo yoyote muhimu..."></textarea>
+            </div>
+            
+            <button type="submit" class="btn-save">Ongeza Mteja</button>
+        </form>
+    </div>
+
+    <!-- Right List: Customers & Debts -->
+    <div class="list-card">
+        <div style="padding: 20px 25px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="font-size: 1.1rem; font-weight: 700;">Madeni ya Wateja</h3>
+        </div>
+        
+        <div class="table-container">
+            <table class="debt-table">
+                <thead>
+                    <tr>
+                        <th>Mteja</th>
+                        <th>Namba ya Simu</th>
+                        <th>Kiasi Alichokopa</th>
+                        <th>Deni Lililobaki</th>
+                        <th>Hadhi ya Deni</th>
+                        <th style="text-align: right;">Vitendo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if customers_with_debts %}
+                        {% for record in customers_with_debts %}
+                            <tr>
+                                <td>
+                                    <strong>{{ record.name }}</strong>
+                                </td>
+                                <td>{{ record.phone }}</td>
+                                <td>{{ record.total_borrowed }} TZS</td>
+                                <td>
+                                    <strong style="color: {% if record.total_balance > 0 %}var(--danger){% else %}var(--success){% endif %};">
+                                        {{ record.total_balance }} TZS
+                                    </strong>
+                                </td>
+                                <td>
+                                    {% if record.total_balance == 0 %}
+                                        <span class="status-badge success">Imelipwa Yote</span>
+                                    {% elif record.total_paid > 0 %}
+                                        <span class="status-badge warning">Imelipwa Kiasi</span>
+                                    {% else %}
+                                        <span class="status-badge danger">Haijalipwa</span>
+                                    {% endif %}
+                                </td>
+                                <td style="text-align: right;">
+                                    <a href="{% url 'store_debt_detail_slug' slug=store.slug customer_id=record.id %}" class="btn-action">
+                                        <i class="fa-solid fa-folder-open"></i> Fungua details
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                                Hakuna wateja waliosajiliwa wenye historia ya madeni kwa sasa.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

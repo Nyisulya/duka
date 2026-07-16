@@ -84,10 +84,12 @@ class Sale(models.Model):
         ('airtelmoney', 'Airtel Money'),
         ('halo-pesa', 'Halo Pesa'),
         ('card', 'Bank Card / Visa'),
+        ('debt', 'Deni / Mkopo'),
     )
 
     duka = models.ForeignKey(Duka, on_delete=models.CASCADE, related_name="sales")
     cashier = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name="sales")
+    customer = models.ForeignKey('Customer', on_delete=models.SET_NULL, null=True, blank=True, related_name="sales", verbose_name="Mteja (kwa Mauzo ya Deni)")
     sale_date = models.DateTimeField(auto_now_add=True)
     total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHODS, default='cash')
@@ -143,3 +145,72 @@ class OrderItem(models.Model):
     @property
     def subtotal(self):
         return self.quantity * self.price_at_order
+
+
+# 9. Customer Model (Wateja wa Duka)
+class Customer(models.Model):
+    duka = models.ForeignKey(Duka, on_delete=models.CASCADE, related_name="customers")
+    name = models.CharField(max_length=100, verbose_name="Jina la Mteja")
+    phone = models.CharField(max_length=20, verbose_name="Namba ya Simu")
+    email = models.EmailField(blank=True, verbose_name="Barua Pepe")
+    address = models.TextField(blank=True, verbose_name="Anwani / Maelezo")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.duka.name})"
+
+    class Meta:
+        verbose_name = "Mteja"
+        verbose_name_plural = "Wateja"
+        unique_together = ('duka', 'phone')
+
+
+# 10. Debt Model (Madeni ya Wateja)
+class Debt(models.Model):
+    STATUS_CHOICES = (
+        ('unpaid', 'Haijalipwa (Unpaid)'),
+        ('partially_paid', 'Imelipwa Kiasi (Partially Paid)'),
+        ('paid', 'Imelipwa Yote (Paid)'),
+    )
+
+    duka = models.ForeignKey(Duka, on_delete=models.CASCADE, related_name="debts")
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="debts")
+    sale = models.ForeignKey(Sale, on_delete=models.CASCADE, null=True, blank=True, related_name="debts", verbose_name="Mauzo Husika")
+    amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Kiasi cha Deni")
+    balance = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Kiwango Kilichobaki")
+    due_date = models.DateField(null=True, blank=True, verbose_name="Tarehe ya Mwisho ya Kulipa")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='unpaid', verbose_name="Hadhi ya Deni")
+    created_at = models.DateTimeField(auto_now_add=True)
+    notes = models.TextField(blank=True, verbose_name="Maelezo")
+
+    def __str__(self):
+        return f"Deni #{self.id} - {self.customer.name} ({self.balance} left)"
+
+    class Meta:
+        verbose_name = "Deni"
+        verbose_name_plural = "Madeni"
+
+
+# 11. DebtPayment Model (Malipo ya Madeni)
+class DebtPayment(models.Model):
+    PAYMENT_METHODS = (
+        ('cash', 'Cash (Fedha Taslimu)'),
+        ('m-pesa', 'M-Pesa'),
+        ('tigopesa', 'Tigo Pesa'),
+        ('airtelmoney', 'Airtel Money'),
+        ('halo-pesa', 'Halo Pesa'),
+        ('card', 'Bank Card / Visa'),
+    )
+
+    debt = models.ForeignKey(Debt, on_delete=models.CASCADE, related_name="payments")
+    amount_paid = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Kiasi Kilicholipwa")
+    payment_date = models.DateTimeField(auto_now_add=True, verbose_name="Tarehe ya Malipo")
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHODS, default='cash', verbose_name="Njia ya Malipo")
+    received_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Mpokeaji (Cashier)")
+
+    def __str__(self):
+        return f"Malipo #{self.id} - Kiasi {self.amount_paid} kwenye Deni #{self.debt.id}"
+
+    class Meta:
+        verbose_name = "Malipo ya Deni"
+        verbose_name_plural = "Malipo ya Madeni"

@@ -23,10 +23,14 @@ urlpatterns = [
     path('store/<slug:slug>/admin/categories/', views.store_categories, name='store_categories_slug'),
     path('store/<slug:slug>/admin/settings/', views.store_settings, name='store_settings_slug'),
     path('store/<slug:slug>/admin/sales/', views.store_sales_report, name='store_sales_report_slug'),
+    path('store/<slug:slug>/admin/debts/', views.store_debts, name='store_debts_slug'),
+    path('store/<slug:slug>/admin/debts/<int:customer_id>/', views.store_debt_detail, name='store_debt_detail_slug'),
+    path('store/<slug:slug>/admin/debts/<int:customer_id>/pay/', views.store_debt_pay, name='store_debt_pay_slug'),
     
     # 4. Point of Sale (POS) & Orders
     path('store/<slug:slug>/admin/pos/', views.store_pos, name='store_pos_slug'),
     path('store/<slug:slug>/admin/pos/checkout/', views.store_pos_checkout, name='store_pos_checkout_slug'),
+    path('store/<slug:slug>/admin/customers/quick-add/', views.store_quick_customer, name='store_quick_customer_slug'),
     path('store/<slug:slug>/admin/orders/', views.store_orders, name='store_orders_slug'),
     path('store/<slug:slug>/admin/orders/<int:order_id>/update/', views.store_order_update, name='store_order_update_slug'),
 ]

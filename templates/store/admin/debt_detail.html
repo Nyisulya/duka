@@ -1,0 +1,412 @@
+{% extends 'store/admin/base.html' %}
+
+{% block title %}Taarifa za Deni - {{ customer.name }}{% endblock %}
+
+{% block page_title %}Deni la Mteja: {{ customer.name }}{% endblock %}
+
+{% block active_debts %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-layout {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 30px;
+        align-items: start;
+    }
+
+    .info-card {
+        background-color: var(--bg-card);
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.01);
+    }
+
+    .info-group {
+        margin-bottom: 20px;
+        border-bottom: 1px solid #f1f5f9;
+        padding-bottom: 15px;
+    }
+
+    .info-group:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+        margin-bottom: 0;
+    }
+
+    .info-label {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        margin-bottom: 5px;
+        font-weight: 600;
+    }
+
+    .info-val {
+        font-size: 1.05rem;
+        color: var(--text-dark);
+        font-weight: 500;
+    }
+
+    .info-val.highlight {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--danger);
+    }
+
+    .info-val.success {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--success);
+    }
+
+    .actions-card {
+        background-color: var(--bg-card);
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.01);
+        margin-bottom: 30px;
+    }
+
+    .form-group {
+        margin-bottom: 18px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .form-group input, .form-group select {
+        width: 100%;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 12px;
+        font-size: 0.95rem;
+        outline: none;
+    }
+
+    .form-group input:focus, .form-group select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .btn-pay {
+        background-color: var(--success);
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
+        transition: all 0.2s;
+        width: 100%;
+    }
+
+    .btn-pay:hover {
+        background-color: #059669;
+    }
+
+    .history-card {
+        background-color: var(--bg-card);
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 0;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.01);
+        overflow: hidden;
+    }
+
+    .tabs-header {
+        display: flex;
+        border-bottom: 1px solid #e2e8f0;
+        background-color: #f8fafc;
+    }
+
+    .tab-btn {
+        flex: 1;
+        padding: 15px;
+        text-align: center;
+        border: none;
+        background: none;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+        color: var(--primary);
+        border-bottom-color: var(--primary);
+        background-color: white;
+    }
+
+    .tab-content {
+        padding: 20px;
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    .history-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    .history-table th {
+        padding: 12px 15px;
+        color: var(--text-muted);
+        font-weight: 600;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .history-table td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 0.9rem;
+    }
+
+    .history-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .btn-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-weight: 500;
+        margin-bottom: 25px;
+        transition: color 0.2s;
+    }
+
+    .btn-back:hover {
+        color: var(--text-dark);
+    }
+
+    @media (max-width: 992px) {
+        .detail-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<a href="{% url 'store_debts_slug' slug=store.slug %}" class="btn-back">
+    <i class="fa-solid fa-arrow-left"></i> Rudi kwenye Madeni ya Wateja
+</a>
+
+<div class="detail-layout">
+    <!-- Left Card: Customer Info -->
+    <div class="info-card">
+        <h3 style="font-size: 1.10rem; font-weight: 700; margin-bottom: 25px; display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-user-tag" style="color: var(--primary);"></i> Taarifa za Mteja
+        </h3>
+        
+        <div class="info-group">
+            <div class="info-label">Jina Kamili</div>
+            <div class="info-val"><strong>{{ customer.name }}</strong></div>
+        </div>
+
+        <div class="info-group">
+            <div class="info-label">Namba ya Simu</div>
+            <div class="info-val">{{ customer.phone }}</div>
+        </div>
+
+        {% if customer.email %}
+            <div class="info-group">
+                <div class="info-label">Barua Pepe (Email)</div>
+                <div class="info-val">{{ customer.email }}</div>
+            </div>
+        {% endif %}
+
+        {% if customer.address %}
+            <div class="info-group">
+                <div class="info-label">Anwani / Maelezo</div>
+                <div class="info-val">{{ customer.address }}</div>
+            </div>
+        {% endif %}
+
+        <div class="info-group">
+            <div class="info-label">Jumla ya Madeni Aliyokopa</div>
+            <div class="info-val"><strong>{{ total_borrowed }} TZS</strong></div>
+        </div>
+
+        <div class="info-group">
+            <div class="info-label">Jumla Aliyolipa (Marejesho)</div>
+            <div class="info-val" style="color: var(--success);"><strong>{{ total_paid }} TZS</strong></div>
+        </div>
+
+        <div class="info-group">
+            <div class="info-label">Deni Lililobaki Sasa</div>
+            {% if total_balance > 0 %}
+                <div class="info-val highlight">{{ total_balance }} TZS</div>
+            {% else %}
+                <div class="info-val success"><i class="fa-solid fa-circle-check"></i> Imelipwa Yote</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Right Content -->
+    <div>
+        <!-- Pay/Installment Form -->
+        {% if total_balance > 0 %}
+            <div class="actions-card">
+                <h3 style="font-size: 1.10rem; font-weight: 700; margin-bottom: 20px;">Rekodi Malipo ya Deni (Marejesho)</h3>
+                <form method="POST" action="{% url 'store_debt_pay_slug' slug=store.slug customer_id=customer.id %}">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="amount_paid">Kiasi Kinacholipiwa * (TZS)</label>
+                        <input type="number" step="0.01" max="{{ total_balance }}" id="amount_paid" name="amount_paid" required placeholder="Mfano: 5000">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="payment_method">Njia ya Malipo *</label>
+                        <select id="payment_method" name="payment_method" required>
+                            <option value="cash">Cash (Fedha Taslimu)</option>
+                            <option value="m-pesa">M-Pesa</option>
+                            <option value="tigopesa">Tigo Pesa</option>
+                            <option value="airtelmoney">Airtel Money</option>
+                            <option value="halo-pesa">Halo Pesa</option>
+                            <option value="card">Bank Card / Visa</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn-pay">
+                        <i class="fa-solid fa-receipt"></i> Rekodi Malipo
+                    </button>
+                </form>
+            </div>
+        {% endif %}
+
+        <!-- Tabbed History lists -->
+        <div class="history-card">
+            <div class="tabs-header">
+                <button class="tab-btn active" onclick="switchTab('debts-tab', this)">Historia ya Madeni (Mikopo)</button>
+                <button class="tab-btn" onclick="switchTab('payments-tab', this)">Historia ya Marejesho (Malipo)</button>
+            </div>
+
+            <!-- Tab 1: Debts (Mikopo) -->
+            <div id="debts-tab" class="tab-content active">
+                <div style="overflow-x: auto;">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Tarehe</th>
+                                <th>Kiasi cha Deni</th>
+                                <th>Kiasi Kilibaki</th>
+                                <th>Hadhi</th>
+                                <th>Maelezo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if debts %}
+                                {% for debt in debts %}
+                                    <tr>
+                                        <td>#{{ debt.id }}</td>
+                                        <td>{{ debt.created_at|date:"d/m/Y H:i" }}</td>
+                                        <td>{{ debt.amount }} TZS</td>
+                                        <td><strong>{{ debt.balance }} TZS</strong></td>
+                                        <td>
+                                            {% if debt.status == 'paid' %}
+                                                <span style="color: var(--success); font-weight: 600;">Imelipwa</span>
+                                            {% elif debt.status == 'partially_paid' %}
+                                                <span style="color: var(--warning); font-weight: 600;">Kiasi</span>
+                                            {% else %}
+                                                <span style="color: var(--danger); font-weight: 600;">Haijalipwa</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if debt.sale %}
+                                                Mauzo #{{ debt.sale.id }}
+                                            {% else %}
+                                                {{ debt.notes|default:"-" }}
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 15px;">
+                                        Mteja huyu hana historia ya kukopa.
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab 2: Payments (Marejesho) -->
+            <div id="payments-tab" class="tab-content">
+                <div style="overflow-x: auto;">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Tarehe</th>
+                                <th>Deni Linalolipiwa</th>
+                                <th>Kiasi Kilicholipwa</th>
+                                <th>Njia ya Malipo</th>
+                                <th>Mpokeaji</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if payments %}
+                                {% for p in payments %}
+                                    <tr>
+                                        <td>{{ p.payment_date|date:"d/m/Y H:i" }}</td>
+                                        <td>Deni #{{ p.debt.id }} (Kopwa {{ p.debt.created_at|date:"d/m/Y" }})</td>
+                                        <td style="color: var(--success); font-weight: 600;">+{{ p.amount_paid }} TZS</td>
+                                        <td>{{ p.get_payment_method_display }}</td>
+                                        <td>{{ p.received_by.first_name }}</td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 15px;">
+                                        Mteja huyu hajarudisha malipo yoyote bado.
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function switchTab(tabId, btn) {
+        // Ficha yaliyopo yote
+        document.querySelectorAll('.tab-content').forEach(function(content) {
+            content.classList.remove('active');
+        });
+        
+        // Ondoa rangi ya kitufe kilichochaguliwa
+        document.querySelectorAll('.tab-btn').forEach(function(tabBtn) {
+            tabBtn.classList.remove('active');
+        });
+        
+        // Onyesha tab iliyochaguliwa na kuweka kitufe kuwa active
+        document.getElementById(tabId).classList.add('active');
+        btn.classList.add('active');
+    }
+</script>
+{% endblock %}
