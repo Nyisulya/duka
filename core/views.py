@@ -171,10 +171,10 @@ def store_order_success(request, slug, order_id):
 def store_login(request, slug):
     duka = get_object_or_404(Duka, slug=slug)
     if request.method == 'POST':
-        email = request.POST.get('email')
+        username = request.POST.get('username')
         password = request.POST.get('password')
         
-        user = authenticate(request, username=email, password=password)
+        user = authenticate(request, username=username, password=password)
         if user is not None:
             # Hakikisha mfanyakazi huyu ni wa duka hili au ni superuser
             if user.is_superuser or (user.duka and user.duka.slug == slug):
@@ -184,7 +184,7 @@ def store_login(request, slug):
             else:
                 messages.error(request, "Akaunti hii haina ruhusa ya kuingia kwenye duka hili.")
         else:
-            messages.error(request, "Barua pepe au nenosiri si sahihi.")
+            messages.error(request, "Jina la mtumiaji au nenosiri si sahihi.")
             
     return render(request, 'store/admin/login.html', {'duka': duka})
 
