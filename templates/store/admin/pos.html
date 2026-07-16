@@ -552,7 +552,7 @@
 
         <div class="receipt-actions">
             <button class="btn-receipt-action" onclick="closeReceiptModal()">Funga</button>
-            <button class="btn-receipt-action" style="background-color: #25d366; color: white; border: none;" onclick="shareReceiptWhatsApp()"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
+            <button class="btn-receipt-action" style="background-color: #0284c7; color: white; border: none;" onclick="shareReceiptSMS()"><i class="fa-solid fa-comment-sms"></i> Tuma SMS</button>
             <button class="btn-receipt-action btn-receipt-print" onclick="window.print()"><i class="fa-solid fa-print"></i> Print</button>
         </div>
     </div>
@@ -824,7 +824,7 @@ ${itemsLines}
         document.getElementById('receipt-modal-overlay').classList.add('open');
     }
 
-    function shareReceiptWhatsApp() {
+    function shareReceiptSMS() {
         if (!lastSaleData) {
             alert("Hakuna taarifa za risiti ya mwisho.");
             return;
@@ -832,37 +832,44 @@ ${itemsLines}
 
         let phone = lastSaleData.customer_phone || "";
         if (!phone) {
-            phone = prompt("Weka namba ya simu ya mteja (WhatsApp - Mfano: 0712345678):");
+            phone = prompt("Weka namba ya simu ya mteja (Mfano: 0712345678):");
             if (!phone) return;
         }
 
-        // Hakikisha namba inaanza na format ya kimataifa ya Tanzania (k.m. 255...)
         phone = phone.trim();
-        if (phone.startsWith("0")) {
-            phone = "255" + phone.substring(1);
-        } else if (!phone.startsWith("255")) {
-            phone = "255" + phone;
+
+        // Tengeneza mchanganuo wa bidhaa
+        let itemsLines = "";
+        lastSaleData.items.forEach(item => {
+            itemsLines += `- ${item.name}: ${item.qty} x ${item.price.toLocaleString('en-US')} = ${item.subtotal.toLocaleString('en-US')} TSH\n`;
+        });
+
+        // Tengeneza ujumbe mzuri wa SMS wenye mchanganuo kamili (bila link)
+        const message = `Habari! Asante kwa kufanya manunuzi katika {{ store.name|escapejs }}.\n\nMchanganuo wa mauzo yako (#POS-${lastSaleData.sale_id}):\n${itemsLines}\nJUMLA KUU: ${lastSaleData.total.toLocaleString('en-US')} TSH\nNjia ya Malipo: ${lastSaleData.payment_method.toUpperCase()}\nTarehe: ${lastSaleData.date}\n\nKaribu tena!`;
+
+        // Copy kwenye clipboard kwa ajili ya usalama/kuhifadhi nakala
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(message).then(() => {
+                console.log("Ujumbe umenakiliwa kwenye clipboard.");
+            }).catch(err => {
+                console.error("Imeshindwa kunakili ujumbe: ", err);
+            });
         }
-
-        // Tengeneza public receipt URL
-        const protocol = window.location.protocol;
-        const host = window.location.host;
-        const slug = "{{ store.slug }}";
-        const receiptUrl = `${protocol}//${host}/store/${slug}/receipt/${lastSaleData.sale_id}/`;
-
-        const message = `Habari! Asante kwa kufanya manunuzi katika *{{ store.name|escapejs }}*. Hapa kuna risiti yako ya kielektroniki ya mauzo ya kiasi cha *${lastSaleData.total.toLocaleString('en-US')} TZS*:\n\n${receiptUrl}\n\nKaribu tena!`;
 
         // Tambua kama mtumiaji yupo kwenye simu au kompyuta
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
         if (isMobile) {
-            // Inafungua App ya WhatsApp moja kwa moja bila kufungua tab mpya nyeusi kwenye kivinjari
-            whatsappUrl = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(message)}`;
-            window.location.href = whatsappUrl;
+            let smsUrl = "";
+            if (isIOS) {
+                smsUrl = `sms:${phone}&body=${encodeURIComponent(message)}`;
+            } else {
+                smsUrl = `sms:${phone}?body=${encodeURIComponent(message)}`;
+            }
+            window.location.href = smsUrl;
         } else {
-            // Inafungua WhatsApp Web kwenye kompyuta kwa tab mpya
-            whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-            window.open(whatsappUrl, '_blank');
+            alert(`Ujumbe wa SMS kwa mteja (${phone}) umenakiliwa kwenye clipboard!\n\nUnaweza kuubandika (paste) popote ili kuutuma.`);
         }
     }
 

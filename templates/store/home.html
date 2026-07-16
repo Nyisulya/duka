@@ -298,12 +298,7 @@
     <div class="products-grid">
         {% for p in products %}
             <div class="product-card">
-                <!-- Glashmorphic Badges for Stock Level -->
-                {% if p.stock_level <= 0 %}
-                    <span class="product-badge product-badge-out"><i class="fa-solid fa-ban"></i> Imeisha Stoo</span>
-                {% elif p.stock_level <= p.min_stock_alert %}
-                    <span class="product-badge product-badge-low"><i class="fa-solid fa-triangle-exclamation"></i> Inakaribia kuisha ({{ p.stock_level }})</span>
-                {% endif %}
+
 
                 <div class="product-img-container">
                     {% if p.image %}
