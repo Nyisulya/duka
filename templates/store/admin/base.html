@@ -224,24 +224,86 @@
             background: #059669 !important;
         }
 
+        /* Mobile Nav Toggle Button */
+        .mobile-nav-toggle {
+            display: none;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            z-index: 99;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+        }
+        .mobile-nav-toggle:hover {
+            background-color: var(--primary-hover);
+        }
+
+        /* Overlay when sidebar is open on mobile */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 98;
+            backdrop-filter: blur(2px);
+        }
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .sidebar-close {
+            display: none;
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 1.4rem;
+            cursor: pointer;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            transition: color 0.2s;
+        }
+        .sidebar-close:hover {
+            color: white;
+        }
+
         /* Responsive */
         @media (max-width: 992px) {
+            .mobile-nav-toggle {
+                display: block;
+            }
+
             aside {
-                width: 70px;
+                width: 260px;
+                transform: translateX(-100%);
+                box-shadow: 5px 0 25px rgba(0, 0, 0, 0.15);
+                z-index: 99;
             }
-            aside .sidebar-header h3, aside .sidebar-header span, aside .sidebar-menu a span, aside .sidebar-footer {
-                display: none;
+
+            aside.active {
+                transform: translateX(0);
             }
-            aside .sidebar-header {
-                padding: 15px;
-                justify-content: center;
+
+            aside .sidebar-header h3, 
+            aside .sidebar-header span, 
+            aside .sidebar-menu a span, 
+            aside .sidebar-footer {
+                display: block !important;
             }
-            aside .sidebar-menu a {
-                padding: 12px;
-                justify-content: center;
+            
+            .sidebar-close {
+                display: block;
             }
+
             main {
-                margin-left: 70px;
+                margin-left: 0 !important;
                 padding: 20px 15px;
             }
         }
@@ -251,6 +313,7 @@
 <body>
     <!-- Sidebar -->
     <aside>
+        <button class="sidebar-close" id="sidebarCloseBtn"><i class="fa-solid fa-xmark"></i></button>
         <div class="sidebar-header">
             {% if store.logo %}
                 <img src="{{ store.logo.url }}" alt="{{ store.name }}">
@@ -332,7 +395,12 @@
     <!-- Main Workspace -->
     <main>
         <div class="top-header">
-            <h2>{% block page_title %}Dashboard{% endblock %}</h2>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button class="mobile-nav-toggle" id="mobileNavToggle">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <h2>{% block page_title %}Dashboard{% endblock %}</h2>
+            </div>
             <div class="user-profile">
                 <div class="user-info">
                     <h5>{{ request.user.first_name }}</h5>
@@ -357,5 +425,28 @@
     </main>
 
     {% block extra_js %}{% endblock %}
+    
+    <!-- Mobile Sidebar Menu Toggle Script -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const toggleBtn = document.getElementById("mobileNavToggle");
+            const closeBtn = document.getElementById("sidebarCloseBtn");
+            const sidebar = document.querySelector("aside");
+            
+            // Unda overlay
+            const overlay = document.createElement("div");
+            overlay.className = "sidebar-overlay";
+            document.body.appendChild(overlay);
+
+            function toggleSidebar() {
+                sidebar.classList.toggle("active");
+                overlay.classList.toggle("active");
+            }
+
+            if (toggleBtn) toggleBtn.addEventListener("click", toggleSidebar);
+            if (closeBtn) closeBtn.addEventListener("click", toggleSidebar);
+            overlay.addEventListener("click", toggleSidebar);
+        });
+    </script>
 </body>
 </html>

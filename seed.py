@@ -18,6 +18,7 @@ def seed_data():
         name="Mitindo Soap Wholesale",
         slug="mitindo",
         store_type="sabuni",
+        logo="logos/mitindo_logo.png",
         theme_color="#10b981", # Green theme
         whatsapp_number="+255712345678",
         description="Wauzaji wa sabuni zote za kufulia, kuogea na sabuni za maji kwa bei ya jumla."
@@ -25,7 +26,7 @@ def seed_data():
     
     # Mmiliki wa duka la 1
     owner1 = CustomUser.objects.create_user(
-        username="owner@mitindo.com",
+        username="mitindo_owner",
         email="owner@mitindo.com",
         password="password123",
         first_name="Mitindo Owner",
@@ -43,6 +44,7 @@ def seed_data():
         category=cat1_1,
         name="Sabuni ya Kipande (Mche wa 5)",
         description="Mche imara wa sabuni ya kufulia, unadumu kwa muda mrefu.",
+        image="products/soap_bar.png",
         cost_price=8000.00,
         selling_price=10000.00,
         stock_level=50,
@@ -54,6 +56,7 @@ def seed_data():
         category=cat1_2,
         name="Sabuni ya Maji ya Ndimu (5 Litre)",
         description="Sabuni ya maji kwa ajili ya kuoshea vyombo na kusafishia sakafu yenye harufu nzuri ya ndimu.",
+        image="products/liquid_soap.png",
         cost_price=12000.00,
         selling_price=15000.00,
         stock_level=20,
@@ -65,6 +68,7 @@ def seed_data():
         category=cat1_1,
         name="Sabuni ya Poda (Omo 1kg)",
         description="Sabuni ya unga ya kufulia nguo nyeupe na za rangi.",
+        image="products/powder_soap.png",
         cost_price=4000.00,
         selling_price=5000.00,
         stock_level=3, # Critical Stock!
@@ -76,6 +80,7 @@ def seed_data():
         name="Mafuta Bora Store",
         slug="mafuta",
         store_type="mafuta",
+        logo="logos/mafuta_logo.png",
         theme_color="#f59e0b", # Amber/Yellow theme
         whatsapp_number="+255787654321",
         description="Mafuta safi ya alizeti na mawese moja kwa moja kutoka kiwandani."
@@ -83,7 +88,7 @@ def seed_data():
     
     # Mmiliki wa duka la 2
     owner2 = CustomUser.objects.create_user(
-        username="owner@mafuta.com",
+        username="mafuta_owner",
         email="owner@mafuta.com",
         password="password123",
         first_name="Mafuta Owner",
@@ -101,6 +106,7 @@ def seed_data():
         category=cat2_1,
         name="Mafuta ya Alizeti Kori (5 Litre)",
         description="Mafuta safi ya kupikia yasiyo na lehemu (cholesterol).",
+        image="products/cooking_oil.png",
         cost_price=18000.00,
         selling_price=22000.00,
         stock_level=35,
@@ -112,6 +118,7 @@ def seed_data():
         category=cat2_2,
         name="Mafuta ya Nazi (1 Litre)",
         description="Mafuta safi ya nazi kwa ajili ya kupikia na matumizi ya ngozi.",
+        image="products/coconut_oil.png",
         cost_price=6000.00,
         selling_price=7500.00,
         stock_level=40,
@@ -120,8 +127,8 @@ def seed_data():
     
     print("Data za majaribio zimeingizwa kikamilifu!")
     print("\nUnaweza kutumia akaunti hizi za majaribio:")
-    print("1. Duka la Sabuni: owner@mitindo.com (Nenosiri: password123)")
-    print("2. Duka la Mafuta: owner@mafuta.com (Nenosiri: password123)")
+    print("1. Duka la Sabuni: mitindo_owner (Nenosiri: password123)")
+    print("2. Duka la Mafuta: mafuta_owner (Nenosiri: password123)")
 
 if __name__ == "__main__":
     seed_data()
