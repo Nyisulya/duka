@@ -552,6 +552,7 @@
 
         <div class="receipt-actions">
             <button class="btn-receipt-action" onclick="closeReceiptModal()">Funga</button>
+            <button class="btn-receipt-action" style="background-color: #25d366; color: white; border: none;" onclick="shareReceiptWhatsApp()"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
             <button class="btn-receipt-action btn-receipt-print" onclick="window.print()"><i class="fa-solid fa-print"></i> Print</button>
         </div>
     </div>
@@ -565,6 +566,7 @@
     let posCart = [];
     let selectedCategoryId = null;
     let searchVal = '';
+    let lastSaleData = null;
 
     function renderProducts() {
         const grid = document.getElementById('products-grid-el');
@@ -755,6 +757,7 @@
         .then(res => res.json())
         .then(data => {
             if(data.success) {
+                lastSaleData = data;
                 // Sasisha stock level za data ya frontend yetu
                 posCart.forEach(item => {
                     const dbProd = productsData.find(p => p.id === item.id);
@@ -819,6 +822,38 @@ ${itemsLines}
         `;
         
         document.getElementById('receipt-modal-overlay').classList.add('open');
+    }
+
+    function shareReceiptWhatsApp() {
+        if (!lastSaleData) {
+            alert("Hakuna taarifa za risiti ya mwisho.");
+            return;
+        }
+
+        let phone = lastSaleData.customer_phone || "";
+        if (!phone) {
+            phone = prompt("Weka namba ya simu ya mteja (WhatsApp - Mfano: 0712345678):");
+            if (!phone) return;
+        }
+
+        // Hakikisha namba inaanza na format ya kimataifa ya Tanzania (k.m. 255...)
+        phone = phone.trim();
+        if (phone.startsWith("0")) {
+            phone = "255" + phone.substring(1);
+        } else if (!phone.startsWith("255")) {
+            phone = "255" + phone;
+        }
+
+        // Tengeneza public receipt URL
+        const protocol = window.location.protocol;
+        const host = window.location.host;
+        const slug = "{{ store.slug }}";
+        const receiptUrl = `${protocol}//${host}/store/${slug}/receipt/${lastSaleData.sale_id}/`;
+
+        const message = `Habari! Asante kwa kufanya manunuzi katika *{{ store.name|escapejs }}*. Hapa kuna risiti yako ya kielektroniki ya mauzo ya kiasi cha *${lastSaleData.total.toLocaleString('en-US')} TZS*:\n\n${receiptUrl}\n\nKaribu tena!`;
+
+        const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
     }
 
     // Toggle customer group and quick customer form actions

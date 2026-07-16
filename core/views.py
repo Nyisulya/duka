@@ -455,6 +455,7 @@ def store_pos_checkout(request, slug):
                 'total': float(total),
                 'payment_method': sale.get_payment_method_display(),
                 'customer_name': customer.name if customer else None,
+                'customer_phone': customer.phone if customer else None,
                 'date': sale.sale_date.strftime('%Y-%m-%d %H:%M:%S'),
                 'items': receipt_items
             })
@@ -679,3 +680,14 @@ def store_debt_pay(request, slug, customer_id):
         messages.success(request, f"Malipo ya deni kiasi cha {amount_paid} TZS yamefanikiwa kurekodiwa!")
         
     return redirect('store_debt_detail_slug', slug=slug, customer_id=customer_id)
+
+
+def store_public_receipt(request, slug, sale_id):
+    duka = get_object_or_404(Duka, slug=slug)
+    sale = get_object_or_404(Sale, id=sale_id, duka=duka)
+    
+    context = {
+        'store': duka,
+        'sale': sale,
+    }
+    return render(request, 'store/public_receipt.html', context)

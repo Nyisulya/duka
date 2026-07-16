@@ -30,6 +30,7 @@ urlpatterns = [
     # 4. Point of Sale (POS) & Orders
     path('store/<slug:slug>/admin/pos/', views.store_pos, name='store_pos_slug'),
     path('store/<slug:slug>/admin/pos/checkout/', views.store_pos_checkout, name='store_pos_checkout_slug'),
+    path('store/<slug:slug>/receipt/<int:sale_id>/', views.store_public_receipt, name='store_public_receipt_slug'),
     path('store/<slug:slug>/admin/customers/quick-add/', views.store_quick_customer, name='store_quick_customer_slug'),
     path('store/<slug:slug>/admin/orders/', views.store_orders, name='store_orders_slug'),
     path('store/<slug:slug>/admin/orders/<int:order_id>/update/', views.store_order_update, name='store_order_update_slug'),
