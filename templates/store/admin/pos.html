@@ -166,7 +166,7 @@
         display: flex;
         flex-direction: column;
         height: 100%;
-        overflow: hidden;
+        overflow-y: auto;
     }
 
     .pos-cart-header {
@@ -391,6 +391,32 @@
             left: 0;
             top: 0;
             width: 100%;
+        }
+    }
+
+    /* Responsive POS layout for Mobile & Tablet */
+    @media (max-width: 992px) {
+        .pos-layout {
+            grid-template-columns: 1fr;
+            height: auto;
+            overflow: visible;
+            gap: 20px;
+        }
+
+        .pos-products-panel, .pos-cart-panel {
+            height: auto;
+            overflow: visible;
+        }
+
+        .pos-grid-container {
+            max-height: 450px;
+            overflow-y: auto;
+        }
+
+        .pos-cart-items {
+            max-height: 250px;
+            overflow-y: auto;
+            flex: none; /* Disable flex: 1 since parent height is auto */
         }
     }
 </style>
