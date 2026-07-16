@@ -195,9 +195,15 @@
         border-bottom: 1px solid #f8fafc;
     }
 
+    .pos-cart-item-info {
+        min-width: 0;
+    }
+
     .pos-cart-item-name {
         font-size: 0.9rem;
         font-weight: 500;
+        word-break: break-word;
+        white-space: normal;
     }
 
     .pos-cart-item-price {
@@ -212,6 +218,8 @@
         border: 1px solid var(--border-color);
         border-radius: 5px;
         background-color: #f8fafc;
+        flex-shrink: 0;
+        width: 80px;
     }
 
     .pos-cart-qty-btn {
@@ -235,6 +243,7 @@
         font-weight: 700;
         text-align: right;
         min-width: 90px;
+        flex-shrink: 0;
     }
 
     .pos-cart-summary {
@@ -663,7 +672,7 @@
             const row = document.createElement('div');
             row.className = 'pos-cart-row';
             row.innerHTML = `
-                <div>
+                <div class="pos-cart-item-info">
                     <h5 class="pos-cart-item-name">${item.name}</h5>
                     <p class="pos-cart-item-price">${item.price.toLocaleString('en-US')} Tsh</p>
                 </div>
