@@ -27,6 +27,7 @@
         flex-direction: column;
         height: 100%;
         overflow: hidden;
+        min-width: 0;
     }
 
     .pos-search-row {
@@ -167,6 +168,7 @@
         flex-direction: column;
         height: 100%;
         overflow-y: auto;
+        min-width: 0;
     }
 
     .pos-cart-header {
@@ -422,6 +424,7 @@
             grid-template-columns: 1fr;
             height: auto;
             overflow: visible;
+            overflow-x: hidden;
             gap: 20px;
         }
 
@@ -658,6 +661,25 @@
         }
     }
 
+    function updatePosQtyDirect(id, value) {
+        let qty = parseInt(value);
+        if (isNaN(qty) || qty <= 0) {
+            qty = 1;
+        }
+
+        const item = posCart.find(i => i.id === id);
+        const prodInDb = productsData.find(p => p.id === id);
+        
+        if (item && prodInDb) {
+            if (qty > prodInDb.stock) {
+                alert(`Samahani, mzigo uliobakia stoo ni ${prodInDb.stock} tu.`);
+                qty = prodInDb.stock;
+            }
+            item.quantity = qty;
+            renderPosCart();
+        }
+    }
+
     function clearPosCart() {
         posCart = [];
         renderPosCart();
@@ -691,7 +713,7 @@
                 </div>
                 <div class="pos-cart-qty-ctrl">
                     <button class="pos-cart-qty-btn" onclick="changePosQty(${item.id}, -1)">-</button>
-                    <span class="pos-cart-qty-val">${item.quantity}</span>
+                    <input type="number" class="pos-cart-qty-val" value="${item.quantity}" min="1" onchange="updatePosQtyDirect(${item.id}, this.value)" onkeypress="if(event.key === 'Enter') this.blur();">
                     <button class="pos-cart-qty-btn" onclick="changePosQty(${item.id}, 1)">+</button>
                 </div>
                 <span class="pos-cart-row-price">${subtotal.toLocaleString('en-US')} Tsh</span>
