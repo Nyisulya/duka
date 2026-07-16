@@ -216,26 +216,39 @@
         display: flex;
         align-items: center;
         border: 1px solid var(--border-color);
-        border-radius: 5px;
-        background-color: #f8fafc;
+        border-radius: 8px;
+        background-color: #f1f5f9;
         flex-shrink: 0;
-        width: 80px;
+        width: 100px;
+        height: 36px;
+        overflow: hidden;
     }
 
     .pos-cart-qty-btn {
         background: none;
         border: none;
-        width: 25px;
-        height: 25px;
-        font-weight: 600;
+        width: 32px;
+        height: 100%;
+        font-weight: 700;
+        font-size: 1.2rem;
         cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-dark);
+        transition: background-color 0.2s;
+    }
+
+    .pos-cart-qty-btn:hover {
+        background-color: #e2e8f0;
     }
 
     .pos-cart-qty-val {
-        width: 30px;
+        width: 36px;
         text-align: center;
-        font-size: 0.85rem;
-        font-weight: 600;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--primary);
     }
 
     .pos-cart-row-price {
